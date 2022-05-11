@@ -1,12 +1,12 @@
 {
   "name": "sat-router",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "license": "MIT",
   "description": "Библиотека маршрутизации для Angular",
   "homepage": "https://www.youtube.com/channel/UCGntVzOD7faGCYbrUfd8PQg",
   "repository": {
     "type": "git",
-    "url": "https://github.com/AlexanderZhelnin"
+    "url": "https://github.com/AlexanderZhelnin/Angular-SAT-Router"
   },
   "author": {
     "name": "Александр Желнин",
