@@ -1,0 +1,26 @@
+{
+  "name": "sat-router",
+  "version": "1.0.0",
+  "license": "MIT",
+  "description": "Библиотека маршрутизации для Angular",
+  "homepage": "https://www.youtube.com/channel/UCGntVzOD7faGCYbrUfd8PQg",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/AlexanderZhelnin"
+  },
+  "author": {
+    "name": "Александр Желнин",
+    "url": "https://www.youtube.com/channel/UCGntVzOD7faGCYbrUfd8PQg"
+  },
+  "keywords": [
+    "angular",
+    "routing"
+  ],
+  "peerDependencies": {
+    "@angular/common": "^13.1.0",
+    "@angular/core": "^13.1.0"
+  },
+  "dependencies": {
+    "tslib": "^2.3.0"
+  }
+}
