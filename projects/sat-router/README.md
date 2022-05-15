@@ -1,4 +1,5 @@
-# AngularSatRouterLib
+# SATRouter
+Библиотека реализующая собственный механизм маршрутизации, вместо стандартного
 
 [Исходный код](https://github.com/AlexanderZhelnin/Angular-SAT-Router)
 
