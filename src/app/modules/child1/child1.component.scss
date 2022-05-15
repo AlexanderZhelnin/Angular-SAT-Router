@@ -1,0 +1,17 @@
+:host{
+  padding-left: 10px;
+  padding-right: 10px;
+  display: flex;
+  background: lightgray;
+  width: 100%;
+  flex-direction: column;
+  gap: 10px;
+}
+sat-router-outlet{
+  width: 100%;
+
+}
+:nth-child(2),
+:nth-child(3) {
+  height: 200px;
+}

@@ -1,41 +1,43 @@
 import { CommonModule } from '@angular/common';
-import { ModuleWithProviders, NgModule, Type } from '@angular/core';
-import { LoadChildrenCallback } from '@angular/router';
+import { ModuleWithProviders, NgModule } from '@angular/core';
 import { SafeStylePipe } from './pipes/safe-style.pipe';
-import { RoutLoader } from './rout';
-import { SatRouterOutletComponent, SATROUT_LOADERS } from './sat-router-outlet/sat-router-outlet.component';
+import { RoutLoader } from './model';
+import { SATRouterOutletComponent, SATROUT_LOADERS } from './sat-router-outlet.component';
 import { routLoaders } from './static-data';
+import { SatRouterLinkActiveDirective } from './directives/sat-router-link-active.directive';
 
 
 @NgModule({
   declarations: [
     SafeStylePipe,
-    SatRouterOutletComponent
+    SATRouterOutletComponent,
+    SatRouterLinkActiveDirective
   ],
   imports: [
     CommonModule
   ],
   exports: [
-    SatRouterOutletComponent
+    SATRouterOutletComponent,
+    SatRouterLinkActiveDirective
   ]
 })
-export class SatRouterModule
+export class SATRouterModule
 {
-  static forChildren(...routs: RoutLoader[]): ModuleWithProviders<SatRouterModule>
+  static forChildren(...routs: RoutLoader[]): ModuleWithProviders<SATRouterModule>
   {
     return {
-      ngModule: SatRouterModule, providers: [
+      ngModule: SATRouterModule, providers: [
         { provide: SATROUT_LOADERS, useValue: routs, multi: true }
       ]
     }
   }
 
-  static forRoot(...routs: RoutLoader[]): ModuleWithProviders<SatRouterModule>
+  static forRoot(...routs: RoutLoader[]): ModuleWithProviders<SATRouterModule>
   {
     routLoaders.push(...routs);
 
     return {
-      ngModule: SatRouterModule, providers: [
+      ngModule: SATRouterModule, providers: [
         { provide: SATROUT_LOADERS, useValue: routs, multi: true }
       ]
     }

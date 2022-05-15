@@ -1,5 +1,5 @@
 import { Observable, Subject } from 'rxjs';
-import { RoutNode, RoutLoader } from './rout';
+import { RoutNode, RoutLoader } from './model';
 
 
 /** Для проверки можно ли переходить к маршруту */
@@ -12,23 +12,28 @@ export const routLoaders: RoutLoader[] = [];
 //new Map<string, { component?: Type<any>, loadChildren?: LoadChildrenCallback }>();
 
 /** Получить реальный маршрута из иерархии */
-export function getRealPath(path: string, pathData?: RoutNode[]): { fullPath: string, params: any[] | undefined } | undefined
+export function getRealPath(path: string, pathData?: RoutNode[]): { fullPath: string, params: any, currentPath: number[] } | undefined
 {
   const masPath = path?.split('/');
   if ((masPath?.length ?? 0) === 0) return undefined;
 
   let result: string | undefined = '';
-  let params: any[] | undefined;
+  let params: any;
+  let currentPath: number[] = [];
 
   masPath.reduce((ds, name) =>
   {
-    const r = ds?.find(item => (item.name ?? '') === name);
-    if (!r)
+    const index = ds?.findIndex(item => (item.name ?? '') === name) ?? -1;
+    if (index < 0)
     {
-      result = undefined;
+      result += '/*';
       params = undefined;
       return [];
     }
+
+    currentPath.push(index);
+    const r = ds![index];
+
     result += `/${(r?.path ?? '') + ((!!r?.name) ? `:${r.name}` : '')}`;
     params = r.params;
     return r?.children ?? []
@@ -40,6 +45,7 @@ export function getRealPath(path: string, pathData?: RoutNode[]): { fullPath: st
       fullPath: (result[0] === '/')
         ? result.substring(1)
         : result,
-      params
+      params,
+      currentPath
     };
 }

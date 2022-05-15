@@ -1,6 +1,7 @@
 import { Type } from "@angular/core";
 import { LoadChildrenCallback } from "@angular/router";
 
+/** Узел данных маршрута */
 export class RoutNode
 {
   /** Путь маршрута */
@@ -10,7 +11,7 @@ export class RoutNode
   /** Дочерние маршруты */
   children?: RoutNode[];
   /** Параметры маршрута*/
-  params?: any[];
+  params?: any;
 }
 
 /** Маршрут с загрузчиком */
@@ -22,6 +23,8 @@ export interface RoutLoader
   component?: Type<any>;
   /** Загрузчик модуля */
   loadChildren?: LoadChildrenCallback;
+  /** Перенаправление */
+  redirectTo?: string;
   /** Можно ли активировать */
   canActivate?: any[];
   /** Можно ли деактивировать */

@@ -1,6 +1,7 @@
+import { RootService } from './../../root.service';
 import { Component, Inject, OnInit, Optional } from '@angular/core';
 import { Observable } from 'rxjs';
-import { SatRouterService, SATROUT_PARAMS } from 'sat-router';
+import { SATRouterOutletComponent, SATRouterService, SATROUT_PARAMS } from 'sat-router';
 
 @Component({
   selector: 'app-child1',
@@ -13,11 +14,16 @@ export class Child1Component implements OnInit
   index = ++Child1Component._index;
 
   constructor(
-    readonly s_router: SatRouterService,
+    public sro: SATRouterOutletComponent,
+    s_root: RootService,
+    readonly s_router: SATRouterService,
     @Optional() @Inject(SATROUT_PARAMS) private readonly params: Observable<any[] | undefined>)
   {
+
+    //console.log(s_root.index);
+
     this.params?.subscribe({
-      next: ps => console.log(ps)
+      next: ps => console.log('Child1Component_params', ps)
     })
   }
 

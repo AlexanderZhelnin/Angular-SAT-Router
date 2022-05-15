@@ -1,19 +1,18 @@
-import { BehaviorSubject, Subject, Observable, of } from 'rxjs';
-import { RoutNode, RoutLoader } from './rout';
-import { Inject, Injectable, InjectionToken, Optional, Type } from '@angular/core';
-import { LoadChildrenCallback } from '@angular/router';
-import { routLoaders, canActivate } from './static-data';
+import { Subject, Observable, of } from 'rxjs';
+import { RoutNode, RoutLoader } from './model';
+import { Inject, Injectable, InjectionToken, Optional } from '@angular/core';
+import { routLoaders } from './static-data';
 
 /** Токен свойств */
 export const SATROUT_LINK_PARSE = new InjectionToken<(link: string) => Observable<RoutNode[]> | undefined>('SATROUT_LINK_PARSE');
 export const SATROUT_LINK_STRINGIFY = new InjectionToken<(rs: RoutNode[]) => Observable<string> | undefined>('SATROUT_LINK_STRINGIFY');
 
 @Injectable({ providedIn: 'root' })
-export class SatRouterService
+export class SATRouterService
 {
   pathData?: RoutNode[];
   changed$ = new Subject<void>();
-  #current: string = '';
+  #current?: string;
 
   constructor(
     @Optional() @Inject(SATROUT_LINK_PARSE) private parse: (link: string) => Observable<RoutNode[]> | undefined,
@@ -43,9 +42,47 @@ export class SatRouterService
   }
 
   //#region navigate
+  /**
+   * Перейти по строковой ссылке
+   *
+   * ## Пример:
+   * ```ts
+   * navigate('root1/1')
+   * ```
+   */
   navigate(link: string): void;
+  /**
+   * Перейти по данным маршрута
+   *
+   * ## Пример:
+   * ```ts
+   * navigate([
+      {
+        path: 'root1',
+        params: { name: '123' },
+        children: [
+          {
+            path: '1', params: { id: '321' },
+            children: [
+              { name: 'left', params: { userId: '321' } },
+              { name: 'right', params: { userId: '3212' } },
+            ]
+          }
+        ]
+      },
+      {
+        path: 'root1',
+        name: 'rootRight',
+        params: ['', 2,],
+        children: [
+          { name: 'left', params: { admin: true } },
+          { name: 'right', params: ['right2', 6] },
+        ]
+      }
+    ])
+   * ```
+   * */
   navigate(rout: RoutNode[]): void;
-  /** Перейти */
   navigate(arg: string | RoutNode[]): void
   {
     if (typeof arg === 'string')

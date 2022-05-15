@@ -1,0 +1,9 @@
+:host{
+  background: white;
+  display: flex;
+  flex-direction: column;
+
+  sat-router-outlet{
+    flex-grow: 1;
+  }
+}

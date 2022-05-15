@@ -1,0 +1,22 @@
+<nav mat-tab-nav-bar>
+  <a
+  mat-tab-link
+  (click)="onClick1()"
+  [satRouterLinkActive]="path1 + ':' + index"
+  [routerOutlet]="outlet"
+  #rla1="satRouterLinkActive"
+  [active]="rla1.isActive$ | async" >
+    {{path}}1
+  </a>
+
+  <a
+  mat-tab-link
+  (click)="onClick2()"
+  [satRouterLinkActive]="path2 + ':' + index" [routerOutlet]="outlet"
+  #rla2="satRouterLinkActive"
+  [active]="rla2.isActive$ | async">
+    {{path}}2
+  </a>
+
+</nav>
+<sat-router-outlet #outlet [name]="'' + index"></sat-router-outlet>

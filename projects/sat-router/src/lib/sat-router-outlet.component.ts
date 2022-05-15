@@ -1,13 +1,16 @@
 import { LoadChildrenCallback } from '@angular/router';
-import { Component, ElementRef, Inject, InjectionToken, Injector, Input, OnInit, Optional, SkipSelf, Type, ɵcreateInjector, OnDestroy } from '@angular/core';
+import { Component, ElementRef, Inject, InjectionToken, Injector, Input, OnInit, Optional, SkipSelf, Type, ɵcreateInjector as createInjector, OnDestroy } from '@angular/core';
 import { Observable, BehaviorSubject, Subscription } from 'rxjs';
-import { SatRouterService } from '../sat-router.service';
-import { canActivate, getRealPath, routLoaders } from '../static-data';
-import { RoutLoader, RoutNode } from '../rout';
+import { SATRouterService } from './sat-router.service';
+import { canActivate, getRealPath, routLoaders } from './static-data';
+import { RoutLoader, RoutNode } from './model';
 
 /** Токен свойств */
-export const SATROUT_PARAMS = new InjectionToken<Observable<Observable<any[] | undefined>>>('SATROUT_PARAMS');
-
+export const SATROUT_PARAMS = new InjectionToken<Observable<Observable<any | undefined>>>('SATROUT_PARAMS');
+/** Токен текщуго пути */
+export const SATROUT_DIRECTION = new InjectionToken<Observable<number[]>>('SATROUT_DIRECTION');
+/** Токен полного пути */
+export const SATROUT_PATH = new InjectionToken<Observable<string | undefined>>('SATROUT_PATH');
 /** Токен маршрутов */
 export const SATROUT_LOADERS = new InjectionToken<RoutLoader[][]>('SATROUT_LOADERS');
 
@@ -29,28 +32,37 @@ class CContent
   templateUrl: './sat-router-outlet.component.html',
   styleUrls: ['./sat-router-outlet.component.scss']
 })
-export class SatRouterOutletComponent implements OnInit, OnDestroy
+export class SATRouterOutletComponent implements OnInit, OnDestroy
 {
   content1: CContent;
   content2: CContent;
 
   @Input() name: string = '';
-  @Input() direction: 'horizontal' | 'vertical' = 'horizontal';
+  @Input() orientation: 'horizontal' | 'vertical' = 'horizontal';
 
-  #params$ = new BehaviorSubject<any[] | undefined>(undefined);
+  currentRout$ = new BehaviorSubject<{ path: string, direction: number[], params: any } | undefined>(undefined);
+
+  #params$ = new BehaviorSubject<any>(undefined);
+  #path$ = new BehaviorSubject<string | undefined>(undefined);
+  #direction$ = new BehaviorSubject<number[]>([]);
+
   #isFirst = true;
   #subs: Subscription[] = [];
   #index = -1;
 
+  readonly level: number = 0;
+
   constructor(
     private readonly element: ElementRef,
-    private readonly s_router: SatRouterService,
+    private readonly s_router: SATRouterService,
     private readonly parentInjector: Injector,
     //@Inject(SATROUTS) private readonly routsLoader: RoutLoader[][],
-    @SkipSelf() @Optional() protected readonly parent: SatRouterOutletComponent)
+    @SkipSelf() @Optional() protected readonly parent: SATRouterOutletComponent)
   {
     this.content1 = new CContent(parentInjector);
     this.content2 = new CContent(parentInjector);
+
+    if (!!parent) this.level = parent.level + 1;
   }
 
   ngOnInit(): void
@@ -98,16 +110,18 @@ export class SatRouterOutletComponent implements OnInit, OnDestroy
     if (!cp)
     {
       c1.component.next(undefined);
+      c2.component.next(undefined);
       return;
     }
+
     console.assert(!!rt, `Обработчик: "${cp.fullPath}" не существует`);
 
     if (!!rt?.component)
-      this.#update(c1, c2, index, rt.component, cp.params);
+      this.#update(c1, c2, index, rt.component, cp.params, cp.currentPath, cp.fullPath);
     else if (!!rt?.loadChildren)
     {
       const ci = await this.#loadModule(cp.fullPath, rt.loadChildren);
-      this.#update(c1, c2, index, ci.component, cp.params, ci.mInjector);
+      this.#update(c1, c2, index, ci.component, cp.params, cp.currentPath, cp.fullPath, ci.mInjector);
     }
     else
     {
@@ -119,7 +133,7 @@ export class SatRouterOutletComponent implements OnInit, OnDestroy
   /** Получить информацию по маршруту */
   #getRout(routNodes: RoutNode[] | undefined):
     {
-      cp: { fullPath: string; params: any[] | undefined; } | undefined,
+      cp: { fullPath: string; params: any; currentPath: number[] } | undefined,
       rt: RoutLoader | undefined,
       index: number
     }
@@ -136,7 +150,19 @@ export class SatRouterOutletComponent implements OnInit, OnDestroy
 
     if (!cp) return { cp, rt: undefined, index: -1 };
 
-    const index = routLoaders.findIndex(rl => rl.path === cp.fullPath);
+    let index = routLoaders.findIndex(rl => rl.path === cp.fullPath);
+    if (index < 0)
+    {
+      const masFullPath = cp.fullPath.split('/');
+      const sPath = masFullPath.slice(0, -1).join('/');
+      const anyPath = sPath + ((!!sPath) ? `/*` : '*');
+      index = routLoaders.findIndex(rl => rl.path === anyPath);
+      if (index >= 0 && !!routLoaders[index].redirectTo)
+        index = routLoaders.findIndex(rl => rl.path === routLoaders[index].redirectTo);
+    }
+    else if (!!routLoaders[index].redirectTo)
+      index = routLoaders.findIndex(rl => rl.path === routLoaders[index].redirectTo);
+
     return { cp, rt: (index < 0) ? undefined : routLoaders[index], index };
   }
 
@@ -146,7 +172,9 @@ export class SatRouterOutletComponent implements OnInit, OnDestroy
     c2: CContent,
     index: number,
     component: Type<any> | undefined,
-    params: any[] | undefined,
+    params: any,
+    direction: number[],
+    path: string,
     parentInjector: Injector | undefined = undefined,
   )
   {
@@ -159,7 +187,7 @@ export class SatRouterOutletComponent implements OnInit, OnDestroy
         setTimeout(() =>
         {
           c1.transform = 'translate(0, 0)';
-          this.#loadComponent(params, c1, parentInjector, component);
+          this.#loadComponent(params, direction, path, c1, parentInjector, component);
           this.#isFirst = !this.#isFirst;
           this.#index = index;
         }, 50);
@@ -173,7 +201,7 @@ export class SatRouterOutletComponent implements OnInit, OnDestroy
       {
         const rect = this.#rect();
 
-        switch (this.direction)
+        switch (this.orientation)
         {
           case 'horizontal':
             if (index > this.#index)
@@ -204,7 +232,7 @@ export class SatRouterOutletComponent implements OnInit, OnDestroy
 
         setTimeout(() =>
         {
-          this.#loadComponent(params, c1, parentInjector, component);
+          this.#loadComponent(params, direction, path, c1, parentInjector, component);
 
           c1.display = 'flex';
           c1.transition = 'transform .2s';
@@ -223,19 +251,36 @@ export class SatRouterOutletComponent implements OnInit, OnDestroy
       }, 50);
     }
     else if (JSON.stringify(params) !== JSON.stringify(this.#params$.value))
+    {
+      this.currentRout$.next({ path, direction, params });
       this.#params$.next(params);
+      this.#path$.next(path);
+      this.#direction$.next(direction);
+    }
   }
 
   #loadComponent(
-    params: any[] | undefined,
+    params: any,
+    direction: number[],
+    path: string,
     c: CContent,
     parentInjector: Injector | undefined,
     component: Type<any> | undefined)
   {
+    this.currentRout$.next({ path, direction, params });
     this.#params$ = new BehaviorSubject(params);
+    this.#path$ = new BehaviorSubject<string | undefined>(path);
+    this.#direction$ = new BehaviorSubject(direction);
+
     c.injector = Injector.create(
       {
-        providers: [{ provide: SATROUT_PARAMS, useValue: this.#params$ }],
+        providers: [
+          { provide: SATROUT_PARAMS, useValue: this.#params$ },
+          { provide: SATROUT_DIRECTION, useValue: this.#direction$ },
+          { provide: SATROUT_PATH, useValue: this.#path$ }
+
+
+        ],
         parent: parentInjector ?? this.parentInjector
       });
     c.component.next(component);
@@ -248,16 +293,19 @@ export class SatRouterOutletComponent implements OnInit, OnDestroy
     const module = await pr();
     let component: Type<any> | undefined;
 
-    const mInjector = ɵcreateInjector(module, this.parentInjector);
+
+    const mInjector = createInjector(module, this.parentInjector);
 
     const routs = mInjector.get(SATROUT_LOADERS);
 
     routs[0].forEach(r =>
     {
+      const redirectTo = (!!r.redirectTo) ? `${path}/${r.redirectTo}` : undefined;
+
       if (!r.path)
         component = r.component;
       else
-        this.s_router.addRout({ ...r, path: `${path}/${r.path}` });
+        this.s_router.addRout({ ...r, path: `${path}/${r.path}`, redirectTo });
     });
 
     return { component, mInjector };
