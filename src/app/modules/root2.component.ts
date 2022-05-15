@@ -1,6 +1,6 @@
 import { Component, Inject, OnInit, Optional } from '@angular/core';
 import { Observable } from 'rxjs';
-import { SATROUT_PARAMS } from 'sat-router';
+import { SATRouterOutletComponent, SATROUT_PARAMS } from 'sat-router';
 
 @Component({
   selector: 'app-root2',
@@ -12,7 +12,9 @@ export class Root2Component implements OnInit
 
   options: { level: number, index: number } = { level: 0, index: 0 };
 
-  constructor(@Optional() @Inject(SATROUT_PARAMS) private params: Observable<any>)
+  constructor(
+    public sro: SATRouterOutletComponent,
+    @Optional() @Inject(SATROUT_PARAMS) private params: Observable<any>)
   {
     this.params?.subscribe({
       next: ps =>

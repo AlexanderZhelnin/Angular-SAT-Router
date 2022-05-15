@@ -1,5 +1,5 @@
 import { LoadChildrenCallback } from '@angular/router';
-import { Component, ElementRef, InjectionToken, Injector, Input, OnInit, Optional, SkipSelf, Type, ɵcreateInjector as createInjector, OnDestroy } from '@angular/core';
+import { Component, ElementRef, InjectionToken, Injector, Input, OnInit, Optional, SkipSelf, Type, ɵcreateInjector as createInjector, OnDestroy, ViewChild, Renderer2, ChangeDetectorRef } from '@angular/core';
 import { Observable, BehaviorSubject, Subscription } from 'rxjs';
 import { SATRouterService } from './sat-router.service';
 import { getRealPath, routLoaders } from './static-data';
@@ -16,14 +16,13 @@ export const SATROUT_LOADERS = new InjectionToken<SATRoutLoader[][]>('SATROUT_LO
 
 class CContent
 {
-  transition = 'none';
-  transform = 'translate(0, 0)';
-  display: 'flex' | 'none' = 'none'
   component = new BehaviorSubject<Type<any> | undefined>(undefined);
-  injector: Injector;
-  constructor(injector: Injector)
+
+  constructor(
+    public injector: Injector,
+    public content: HTMLDivElement)
   {
-    this.injector = injector;
+
   }
 }
 
@@ -59,8 +58,12 @@ class CContent
 })
 export class SATRouterOutletComponent implements OnInit, OnDestroy
 {
-  content1: CContent;
-  content2: CContent;
+
+  @ViewChild('contentDiv1', { static: true }) contentDiv1?: ElementRef<any>;
+  @ViewChild('contentDiv2', { static: true }) contentDiv2?: ElementRef<any>;
+
+  content1!: CContent;
+  content2!: CContent;
 
   @Input() name: string = '';
   @Input() orientation: 'horizontal' | 'vertical' = 'horizontal';
@@ -81,17 +84,17 @@ export class SATRouterOutletComponent implements OnInit, OnDestroy
     private readonly element: ElementRef,
     private readonly s_router: SATRouterService,
     private readonly parentInjector: Injector,
-    //@Inject(SATROUTS) private readonly routsLoader: SATRoutLoader[][],
+    private readonly renderer: Renderer2,
     @SkipSelf() @Optional() protected readonly parent: SATRouterOutletComponent)
   {
-    this.content1 = new CContent(parentInjector);
-    this.content2 = new CContent(parentInjector);
-
     if (!!parent) this.level = parent.level + 1;
   }
 
   ngOnInit(): void
   {
+    this.content1 = new CContent(this.parentInjector, this.contentDiv1?.nativeElement);
+    this.content2 = new CContent(this.parentInjector, this.contentDiv2?.nativeElement);
+
     // this.#subs.push(canActivate.canActivate$.subscribe({
     //   next: rns =>
     //   {
@@ -207,73 +210,76 @@ export class SATRouterOutletComponent implements OnInit, OnDestroy
     {
       if (!c1.component.value && !c2.component.value)
       {
-        c1.transition = 'none';
-        c1.display = 'flex';
-        setTimeout(() =>
-        {
-          c1.transform = 'translate(0, 0)';
-          this.#loadComponent(params, direction, path, c1, parentInjector, component);
-          this.#isFirst = !this.#isFirst;
-          this.#index = index;
-        }, 50);
+
+        this.renderer.setStyle(c1.content, 'transition', 'none');
+        this.renderer.setStyle(c1.content, 'display', 'flex');
+        this.renderer.setStyle(c1.content, 'transform', 'translate(0, 0)');
+        this.renderer.setStyle(c2.content, 'display', 'none');
+        this.#loadComponent(params, direction, path, c1, parentInjector, component);
+        this.#isFirst = !this.#isFirst;
+        this.#index = index;
         return;
       }
 
-      c1.transition = 'none';
-      c2.transition = 'transform .2s';
-
-      setTimeout(() =>
+      const observer = new MutationObserver((el) =>
       {
-        const rect = this.#rect();
-
-        switch (this.orientation)
-        {
-          case 'horizontal':
-            if (index > this.#index)
-            {
-              c1.transform = `translate(${rect.width}px, 0)`;
-              c2.transform = `translate(-${rect.width}px, 0)`;
-            }
-            else
-            {
-              c1.transform = `translate(-${rect.width}px, 0)`;
-              c2.transform = `translate(${rect.width}px, 0)`;
-            }
-            break;
-          case 'vertical':
-            if (index > this.#index)
-            {
-              c1.transform = `translate(0, ${rect.height}px)`;
-              c2.transform = `translate(0, -${rect.height}px)`;
-            }
-            else
-            {
-              c1.transform = `translate(0, ${rect.height}px)`;
-              c2.transform = `translate(0, -${rect.height}px)`;
-            }
-            break;
-        }
-        this.#index = index;
-
+        this.renderer.setStyle(c1.content, 'transition', 'transform .2s');
+        this.renderer.setStyle(c1.content, 'transform', 'translate(0, 0)');
+        this.#isFirst = !this.#isFirst;
         setTimeout(() =>
         {
-          this.#loadComponent(params, direction, path, c1, parentInjector, component);
+          c2.component.next(undefined);
+          this.renderer.setStyle(c2.content, 'display', 'none');
+        }, 250);
+        observer.disconnect();
+      });
+      observer.observe(c1.content, { attributes: true });
 
-          c1.display = 'flex';
-          c1.transition = 'transform .2s';
-
-          setTimeout(() =>
+      this.renderer.setStyle(c1.content, 'transition', 'none');
+      this.renderer.setStyle(c2.content, 'transition', 'transform .2s');
+      const rect = this.#rect();
+      switch (this.orientation)
+      {
+        case 'horizontal':
+          if (index > this.#index)
           {
-            c1.transform = 'translate(0, 0)';
-            setTimeout(() =>
-            {
-              c2.component.next(undefined);
-              c2.display = 'none';
-              this.#isFirst = !this.#isFirst;
-            }, 250);
-          }, 50);
-        }, 50);
-      }, 50);
+            this.renderer.setStyle(c1.content, 'transform', `translate(${rect.width}px, 0)`);
+            this.renderer.setStyle(c2.content, 'transform', `translate(-${rect.width}px, 0)`);
+
+            // c1.transform = `translate(${rect.width}px, 0)`;
+            // c2.transform = `translate(-${rect.width}px, 0)`;
+          }
+          else
+          {
+            this.renderer.setStyle(c1.content, 'transform', `translate(-${rect.width}px, 0)`);
+            this.renderer.setStyle(c2.content, 'transform', `translate(${rect.width}px, 0)`);
+
+            // c1.transform = `translate(-${rect.width}px, 0)`;
+            // c2.transform = `translate(${rect.width}px, 0)`;
+          }
+          break;
+        case 'vertical':
+          if (index > this.#index)
+          {
+            this.renderer.setStyle(c1.content, 'transform', `translate(0, ${rect.height}px)`);
+            this.renderer.setStyle(c2.content, 'transform', `translate(0, -${rect.height}px)`);
+
+            // c1.transform = `translate(0, ${rect.height}px)`;
+            // c2.transform = `translate(0, -${rect.height}px)`;
+          }
+          else
+          {
+            this.renderer.setStyle(c1.content, 'transform', `translate(0, -${rect.height}px)`);
+            this.renderer.setStyle(c2.content, 'transform', `translate(0, ${rect.height}px)`);
+
+            // c1.transform = `translate(0, ${rect.height}px)`;
+            // c2.transform = `translate(0, -${rect.height}px)`;
+          }
+          break;
+      }
+      this.#index = index;
+      this.#loadComponent(params, direction, path, c1, parentInjector, component);
+      this.renderer.setStyle(c1.content, 'display', 'flex');
     }
     else if (JSON.stringify(params) !== JSON.stringify(this.#params$.value))
     {

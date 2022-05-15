@@ -1,13 +1,12 @@
-<div class="content"
-  [style.transition]="content1.transition | safestyle"
-  [style.transform]="content1.transform | safestyle"
-  [style.display]="content1.display | safestyle">
-  <ng-container *ngComponentOutlet="(content1.component | async)!; injector: content1.injector"></ng-container>
+<div
+  #contentDiv1
+  class="content">
+  <ng-container *ngComponentOutlet="(content1?.component | async)!; injector: content1.injector"></ng-container>
 </div>
 
-<div class="content"
-  [style.transition]="content2.transition | safestyle"
-  [style.transform]="content2.transform | safestyle"
-  [style.display]="content2.display | safestyle">
+<div
+  #contentDiv2
+  class="content"
+  >
   <ng-container *ngComponentOutlet="(content2.component | async)!; injector: content2.injector"></ng-container>
 </div>
