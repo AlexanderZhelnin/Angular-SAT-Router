@@ -1,6 +1,6 @@
 import { Observable } from 'rxjs';
 import { Component, OnInit, ChangeDetectionStrategy, Input, Optional, Inject } from '@angular/core';
-import { SATRoutNode, SATRouterOutletComponent, SATRouterService, SATROUT_DIRECTION } from 'sat-router';
+import { SATStateNode, SATRouterOutletComponent, SATRouterService, SATROUT_DIRECTION } from 'sat-router';
 
 @Component({
   selector: 'app-tabs',
@@ -15,7 +15,7 @@ export class TabsComponent implements OnInit
   @Input() level: number = 0;
   @Input() path: string = 'root';
 
-  #saveState?: SATRoutNode;
+  #saveState?: SATStateNode;
   #currentPath: number[] = [];
 
   constructor(
@@ -36,12 +36,12 @@ export class TabsComponent implements OnInit
 
   get isVertical() { return this.path === 'subChild'; }
 
-  #cloneData(): { cloneData: SATRoutNode[]; currentNodes: SATRoutNode[]; }
+  #cloneData(): { state: SATStateNode[]; currentNodes: SATStateNode[]; }
   {
-    const cloneData = JSON.parse(JSON.stringify(this.s_rout.pathData ?? [])) as SATRoutNode[];
-    let currentNodes: SATRoutNode[] = cloneData;
+    const state = JSON.parse(JSON.stringify(this.s_rout.state ?? [])) as SATStateNode[];
+    let currentNodes: SATStateNode[] = state;
     this.#currentPath.forEach(i => { currentNodes = currentNodes[i].children ?? []; });
-    return { cloneData, currentNodes }
+    return { state, currentNodes }
   }
 
   onClick1(): void
@@ -73,7 +73,7 @@ export class TabsComponent implements OnInit
         ]
       };
 
-    this.s_rout.navigate(cloned.cloneData);
+    this.s_rout.navigate(cloned.state);
   }
 
   onClick2(): void
@@ -89,6 +89,6 @@ export class TabsComponent implements OnInit
       params: { index: this.index },
     }
 
-    this.s_rout.navigate(cloned.cloneData);
+    this.s_rout.navigate(cloned.state);
   }
 }

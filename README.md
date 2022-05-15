@@ -2,6 +2,13 @@
 
 [Исходный код](https://github.com/AlexanderZhelnin/Angular-SAT-Router)
 
+* [SATRouterModule](#satroutermodule)
+* [SAT_LINK_PARSE](#sat_link_parse)
+* [SAT_STATE_STRINGIFY](#sat_state_stringify)
+* [SATRouterOutletComponent](#satrouteroutletcomponent)
+* [SATRouterService](#satrouterservice)
+* [SATRouterLinkActive](#satrouterlinkactive)
+
 ## SATRouterModule
 Добавляет директивы и сервисы для навигации внутри приложения между представлениями, определенными в приложении. Вы можете импортировать этот NgModule несколько раз, по одному разу, для каждого модуля с отложенной загрузкой.
 Существует два способа регистрации маршрутов при импорте этого модуля
@@ -42,7 +49,58 @@
   ],
 ```
 
+## SAT_LINK_PARSE
+Токен представляющий функцию преобразования из строки в полное состояние маршрута
+```ts
+providers: [
+  {
+    provide: SAT_LINK_PARSE,
+    useValue: (link: string) =>
+    {
+      link = /sat-link:([a-z0-9==%"]+)/img.exec(link)?.[1] ?? '';
+
+      if (!link) return of<SATStateNode[]>(
+        [0, 1, 2].map(index => ({
+          path: 'root1',
+          outlet: index.toString(),
+          params: { index },
+          children: [
+            {
+              path: 'child1',
+              children: [
+                { path: 'subChild1', outlet: '0' },
+                { path: 'subChild3', outlet: '1' }
+              ]
+            }
+          ]
+        }))
+      );
+
+      const s = unzip(decodeURIComponent(link));
+      return of(JSON.parse(s));
+    }
+  },
+```
+## SAT_STATE_STRINGIFY
+Токен представляющий функцию преобразования из полного состояния маршрута в строку
+```ts
+providers: [
+ {
+   provide: SAT_STATE_STRINGIFY,
+   useValue: (rs: SATStateNode[]) =>
+   {
+     const s = encodeURIComponent(zip(JSON.stringify(rs)));
+     return of(`#sat-link:${s}`);
+   }
+ }
+```
+
 ## SATRouterService
+Сервис для навигации
+
+```ts
+
+```
 
 ## SATRouterOutletComponent
 Контейнер маршрута, который динамически заполняется в зависимости от текущего состояния маршрутизатора.
@@ -55,7 +113,7 @@
 ```
 Именованные контейнеры маршрута будут целями маршрута с тем же именем.
 
-Объект `SATRoutNode` для именованного маршрута имеет свойство `outlet` для идентификации целевого контейнера маршрута:
+Объект `SATStateNode` для именованного маршрута имеет свойство `outlet` для идентификации целевого контейнера маршрута:
 `{path: <base-path>, component: <component>, outlet: <target_outlet_name>}`
 
 

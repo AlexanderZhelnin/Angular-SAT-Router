@@ -2,14 +2,14 @@ import { Type } from "@angular/core";
 import { LoadChildrenCallback } from "@angular/router";
 
 /** Узел данных маршрута */
-export class SATRoutNode
+export class SATStateNode
 {
   /** Путь маршрута */
   path?: string;
   /** Имя контейнера маршрута */
   outlet?: string = '';
   /** Дочерние маршруты */
-  children?: SATRoutNode[];
+  children?: SATStateNode[];
   /** Параметры маршрута*/
   params?: any;
 }

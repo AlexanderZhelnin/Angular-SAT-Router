@@ -1,22 +1,81 @@
 import { Subject, Observable, of } from 'rxjs';
-import { SATRoutNode, SATRoutLoader } from './model';
+import { SATStateNode, SATRoutLoader } from './model';
 import { Inject, Injectable, InjectionToken, Optional } from '@angular/core';
 import { routLoaders } from './static-data';
 
-/** Токен свойств */
-export const SATROUT_LINK_PARSE = new InjectionToken<(link: string) => Observable<SATRoutNode[]> | undefined>('SATROUT_LINK_PARSE');
-export const SATROUT_LINK_STRINGIFY = new InjectionToken<(rs: SATRoutNode[]) => Observable<string> | undefined>('SATROUT_LINK_STRINGIFY');
+/**
+ * Токен представляющий функцию преобразования из строки в полное состояние маршрута
+ *
+ * # Пример регистрации в корневом модуле
+ * ```ts
+ * providers: [
+ *   {
+ *     provide: SAT_LINK_PARSE,
+ *     useValue: (link: string) =>
+ *     {
+ *       link = /sat-link:([a-z0-9==%"]+)/img.exec(link)?.[1] ?? '';
+ *
+ *       if (!link) return of<SATStateNode[]>(
+ *         [0, 1, 2].map(index => ({
+ *           path: 'root1',
+ *           outlet: index.toString(),
+ *           params: { index },
+ *           children: [
+ *             {
+ *               path: 'child1',
+ *               children: [
+ *                 { path: 'subChild1', outlet: '0' },
+ *                 { path: 'subChild3', outlet: '1' }
+ *               ]
+ *             }
+ *           ]
+ *         }))
+ *       );
+ *
+ *       const s = unzip(decodeURIComponent(link));
+ *       return of(JSON.parse(s));
+ *     }
+ *   },
+ * ```
+ */
+export const SAT_LINK_PARSE = new InjectionToken<(link: string) => Observable<SATStateNode[]> | undefined>('SATROUT_LINK_PARSE');
+/**
+ * Токен представляющий функцию преобразования из полного состояния маршрута в строку
+ * ```ts
+ * providers: [
+ *  {
+      provide: SAT_STATE_STRINGIFY,
+      useValue: (rs: SATStateNode[]) =>
+      {
+        const s = encodeURIComponent(zip(JSON.stringify(rs)));
+        return of(`#sat-link:${s}`);
+      }
+    }
 
+ * ```
+ */
+export const SAT_STATE_STRINGIFY = new InjectionToken<(rs: SATStateNode[]) => Observable<string> | undefined>('SATROUT_LINK_STRINGIFY');
+
+
+/**
+ * Сервис для навигации
+ *
+ * @publicApi
+ */
 @Injectable({ providedIn: 'root' })
 export class SATRouterService
 {
-  pathData?: SATRoutNode[];
-  changed$ = new Subject<void>();
+  #state?: SATStateNode[];
+  /** Текущее состояние маршрута */
+  get state() { return this.#state ;}
+
+  /** Событие изменения текущего состояния маршрута */
+  readonly changed$ = new Subject<void>();
   #current?: string;
 
   constructor(
-    @Optional() @Inject(SATROUT_LINK_PARSE) private parse: (link: string) => Observable<SATRoutNode[]> | undefined,
-    @Optional() @Inject(SATROUT_LINK_STRINGIFY) private stringify: (rs: SATRoutNode[]) => Observable<string> | undefined,
+    @Optional() @Inject(SAT_LINK_PARSE) private parse: (link: string) => Observable<SATStateNode[]> | undefined,
+    @Optional() @Inject(SAT_STATE_STRINGIFY) private stringify: (rs: SATStateNode[]) => Observable<string> | undefined,
   )
   {
     this.parse ??= (link: string) =>
@@ -26,7 +85,7 @@ export class SATRouterService
       return of(JSON.parse(decodeURIComponent(decodeURI(window.atob(link)))));
     };
 
-    this.stringify ??= (rs: SATRoutNode[]) => of(`#sat-link:${window.btoa(encodeURI(encodeURIComponent(JSON.stringify(rs))))}`);
+    this.stringify ??= (rs: SATStateNode[]) => of(`#sat-link:${window.btoa(encodeURI(encodeURIComponent(JSON.stringify(rs))))}`);
 
     this.navigate(document.location.hash);
   }
@@ -52,7 +111,7 @@ export class SATRouterService
    */
   navigate(link: string): void;
   /**
-   * Перейти по данным маршрута
+   * Перейти по состоянию маршрута
    *
    * ## Пример:
    * ```ts
@@ -82,17 +141,17 @@ export class SATRouterService
     ])
    * ```
    * */
-  navigate(rout: SATRoutNode[]): void;
-  navigate(arg: string | SATRoutNode[]): void
+  navigate(state: SATStateNode[]): void;
+  navigate(arg: string | SATStateNode[]): void
   {
     if (typeof arg === 'string')
     {
       if (this.#current === arg) return;
-      this.parse(arg)?.subscribe({ next: (rs: SATRoutNode[]) => this.navigate(rs) });
+      this.parse(arg)?.subscribe({ next: (rs: SATStateNode[]) => this.navigate(rs) });
       return;
     }
 
-    const rs = arg as SATRoutNode[];
+    const rs = arg as SATStateNode[];
     this.stringify(rs)?.subscribe({
       next: s =>
       {
@@ -100,7 +159,7 @@ export class SATRouterService
 
         //canActivate.canActivate$.
 
-        this.pathData = rs;
+        this.#state = rs;
         this.#current = s;
         this.changed$.next();
 

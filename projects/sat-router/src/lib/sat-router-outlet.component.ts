@@ -3,7 +3,7 @@ import { Component, ElementRef, InjectionToken, Injector, Input, OnInit, Optiona
 import { Observable, BehaviorSubject, Subscription } from 'rxjs';
 import { SATRouterService } from './sat-router.service';
 import { getRealPath, routLoaders } from './static-data';
-import { SATRoutLoader, SATRoutNode } from './model';
+import { SATRoutLoader, SATStateNode } from './model';
 
 /** Токен свойств */
 export const SATROUT_PARAMS = new InjectionToken<Observable<Observable<any | undefined>>>('SATROUT_PARAMS');
@@ -41,12 +41,12 @@ class CContent
  * ```
  *
  * Именованные контейнеры маршрута будут целями маршрута с тем же именем.
- * Объект `SATRoutNode` для именованного маршрута имеет свойство `outlet` для идентификации целевого контейнера маршрута:
+ * Объект `SATStateNode` для именованного маршрута имеет свойство `outlet` для идентификации целевого контейнера маршрута:
  *
  * `{path: <base-path>, component: <component>, outlet: <target_outlet_name>}`
  *
  * @see `SATRouterLinkActiveDirective`
- * @see `SATRoutNode`
+ * @see `SATStateNode`
  * @see `SATRoutLoader`
  * @ngModule SATRouterModule
  *
@@ -116,7 +116,7 @@ export class SATRouterOutletComponent implements OnInit, OnDestroy
   #load(c1: CContent, c2: CContent): Promise<void>;
   async #load(com1?: CContent, com2?: CContent)
   {
-    if (!this.s_router.pathData) return;
+    if (!this.s_router.state) return;
 
     if (!com1)
     {
@@ -130,7 +130,7 @@ export class SATRouterOutletComponent implements OnInit, OnDestroy
     const c1 = com1 as CContent;
     const c2 = com2 as CContent;
 
-    const { cp, rt, index } = this.#getRout(this.s_router.pathData);
+    const { cp, rt, index } = this.#getRout(this.s_router.state);
 
     if (!cp)
     {
@@ -156,7 +156,7 @@ export class SATRouterOutletComponent implements OnInit, OnDestroy
   }
 
   /** Получить информацию по маршруту */
-  #getRout(routNodes: SATRoutNode[] | undefined):
+  #getRout(routNodes: SATStateNode[] | undefined):
     {
       cp: { fullPath: string; params: any; currentPath: number[] } | undefined,
       rt: SATRoutLoader | undefined,

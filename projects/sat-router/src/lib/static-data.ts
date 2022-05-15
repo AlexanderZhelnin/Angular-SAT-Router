@@ -1,18 +1,18 @@
 import { Observable, Subject } from 'rxjs';
-import { SATRoutNode, SATRoutLoader } from './model';
+import { SATStateNode, SATRoutLoader } from './model';
 
 
 /** Для проверки можно ли переходить к маршруту */
-export const canActivate = { canActivate$: new Subject<SATRoutNode[]>(), canActivateResult$: new Subject<boolean>() };
+export const canActivate = { canActivate$: new Subject<SATStateNode[]>(), canActivateResult$: new Subject<boolean>() };
 /** Для проверки можно ли покинуть маршруту */
-export const canDeactivate = { canDeactivate$: new Subject<SATRoutNode[]>(), canDeactivateResult$: new Subject<boolean>() };
+export const canDeactivate = { canDeactivate$: new Subject<SATStateNode[]>(), canDeactivateResult$: new Subject<boolean>() };
 
 //export const routLoaders = new Map<string, { component?: Type<any>, loadChildren?: LoadChildrenCallback }>();
 export const routLoaders: SATRoutLoader[] = [];
 //new Map<string, { component?: Type<any>, loadChildren?: LoadChildrenCallback }>();
 
 /** Получить реальный маршрута из иерархии */
-export function getRealPath(path: string, pathData?: SATRoutNode[]): { fullPath: string, params: any, currentPath: number[] } | undefined
+export function getRealPath(path: string, pathData?: SATStateNode[]): { fullPath: string, params: any, currentPath: number[] } | undefined
 {
   const masPath = path?.split('/');
   if ((masPath?.length ?? 0) === 0) return undefined;

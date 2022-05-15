@@ -1,7 +1,7 @@
 import { NgModule } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
 import { of } from 'rxjs';
-import { SATRouterModule, SATRoutNode, SATROUT_LINK_PARSE, SATROUT_LINK_STRINGIFY } from 'sat-router';
+import { SATRouterModule, SATStateNode, SAT_LINK_PARSE, SAT_STATE_STRINGIFY } from 'sat-router';
 import { AppComponent } from './app.component';
 import { Root2Component } from './modules/root2.component';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
@@ -89,12 +89,12 @@ export function unzip(s: string)
   ],
   providers: [
     {
-      provide: SATROUT_LINK_PARSE,
+      provide: SAT_LINK_PARSE,
       useValue: (link: string) =>
       {
         link = /sat-link:([a-z0-9==%"]+)/img.exec(link)?.[1] ?? '';
 
-        if (!link) return of<SATRoutNode[]>(
+        if (!link) return of<SATStateNode[]>(
           [0, 1, 2].map(index => ({
             path: 'root1',
             outlet: index.toString(),
@@ -117,8 +117,8 @@ export function unzip(s: string)
       }
     },
     {
-      provide: SATROUT_LINK_STRINGIFY,
-      useValue: (rs: SATRoutNode[]) =>
+      provide: SAT_STATE_STRINGIFY,
+      useValue: (rs: SATStateNode[]) =>
       {
         const s = encodeURIComponent(zip(JSON.stringify(rs)));
         return of(`#sat-link:${s}`);
