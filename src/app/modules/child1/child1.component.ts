@@ -23,8 +23,11 @@ export class Child1Component implements OnInit
     //console.log(s_root.index);
 
     this.params?.subscribe({
-      next: ps => console.log('Child1Component_params', ps)
-    })
+      next: ps =>
+      {
+        //console.log('Child1Component_params', ps);
+      }
+    });
   }
 
   ngOnInit(): void

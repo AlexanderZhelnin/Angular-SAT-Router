@@ -1,6 +1,6 @@
 import { Observable } from 'rxjs';
 import { Component, OnInit, ChangeDetectionStrategy, Input, Optional, Inject } from '@angular/core';
-import { RoutNode, SATRouterOutletComponent, SATRouterService, SATROUT_DIRECTION } from 'sat-router';
+import { SATRoutNode, SATRouterOutletComponent, SATRouterService, SATROUT_DIRECTION } from 'sat-router';
 
 @Component({
   selector: 'app-tabs',
@@ -15,7 +15,7 @@ export class TabsComponent implements OnInit
   @Input() level: number = 0;
   @Input() path: string = 'root';
 
-  #saveState?: RoutNode;
+  #saveState?: SATRoutNode;
   #currentPath: number[] = [];
 
   constructor(
@@ -36,10 +36,10 @@ export class TabsComponent implements OnInit
 
   get isVertical() { return this.path === 'subChild'; }
 
-  #cloneData(): { cloneData: RoutNode[]; currentNodes: RoutNode[]; }
+  #cloneData(): { cloneData: SATRoutNode[]; currentNodes: SATRoutNode[]; }
   {
-    const cloneData = JSON.parse(JSON.stringify(this.s_rout.pathData ?? [])) as RoutNode[];
-    let currentNodes: RoutNode[] = cloneData;
+    const cloneData = JSON.parse(JSON.stringify(this.s_rout.pathData ?? [])) as SATRoutNode[];
+    let currentNodes: SATRoutNode[] = cloneData;
     this.#currentPath.forEach(i => { currentNodes = currentNodes[i].children ?? []; });
     return { cloneData, currentNodes }
   }
@@ -52,7 +52,7 @@ export class TabsComponent implements OnInit
     if (!!this.sro)
       cloned.currentNodes[this.index] = {
         path: this.path1,
-        name: '' + this.index,
+        outlet: '' + this.index,
         params: { index: this.index },
       };
     else if (!!this.#saveState)
@@ -60,14 +60,14 @@ export class TabsComponent implements OnInit
     else
       cloned.currentNodes[this.index] = {
         path: this.path1,
-        name: '' + this.index,
+        outlet: '' + this.index,
         params: { index: this.index },
         children: [
           {
             path: 'child1',
             children: [
-              { path: 'subChild1', name: '0' },
-              { path: 'subChild3', name: '1' }
+              { path: 'subChild1', outlet: '0' },
+              { path: 'subChild3', outlet: '1' }
             ]
           }
         ]
@@ -85,7 +85,7 @@ export class TabsComponent implements OnInit
 
     cloned.currentNodes[this.index] = {
       path: this.path2,
-      name: '' + this.index,
+      outlet: '' + this.index,
       params: { index: this.index },
     }
 

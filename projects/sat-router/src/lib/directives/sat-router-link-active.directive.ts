@@ -6,12 +6,32 @@ import { SATRouterOutletComponent } from '../sat-router-outlet.component';
 
 /**
  * Директива для обнаружения активности маршрута
+ * ```
+ * <nav mat-tab-nav-bar>
+ *   <a mat-tab-link (click)="onClick1()"
+ *      [satRouterLinkActive]="{rout_path}"
+ *      [routerOutlet]="outlet"
+ *      #rla1="satRouterLinkActive"
+ *      [active]="rla1.isActive$ | async">
+ *     {{Имя_закладки}}
+ *   </a>
+ *
+ *   <a mat-tab-link (click)="onClick2()"
+ *      [satRouterLinkActive]="{rout_path}"
+ *      [routerOutlet]="outlet"
+ *      #rla2="satRouterLinkActive"
+ *      [active]="rla2.isActive$ | async">
+ *     {{Имя_закладки}}
+ *   </a>
+ * </nav>
+ * <sat-router-outlet #outlet></sat-router-outlet>
+```
  */
 @Directive({
   selector: '[satRouterLinkActive]',
   exportAs: 'satRouterLinkActive'
 })
-export class SatRouterLinkActiveDirective implements OnChanges, OnDestroy, AfterContentInit
+export class SATRouterLinkActiveDirective implements OnChanges, OnDestroy, AfterContentInit
 {
   isActive$ = new BehaviorSubject(false);
 

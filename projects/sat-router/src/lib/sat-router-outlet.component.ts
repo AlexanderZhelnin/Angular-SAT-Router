@@ -1,9 +1,9 @@
 import { LoadChildrenCallback } from '@angular/router';
-import { Component, ElementRef, Inject, InjectionToken, Injector, Input, OnInit, Optional, SkipSelf, Type, ɵcreateInjector as createInjector, OnDestroy } from '@angular/core';
+import { Component, ElementRef, InjectionToken, Injector, Input, OnInit, Optional, SkipSelf, Type, ɵcreateInjector as createInjector, OnDestroy } from '@angular/core';
 import { Observable, BehaviorSubject, Subscription } from 'rxjs';
 import { SATRouterService } from './sat-router.service';
-import { canActivate, getRealPath, routLoaders } from './static-data';
-import { RoutLoader, RoutNode } from './model';
+import { getRealPath, routLoaders } from './static-data';
+import { SATRoutLoader, SATRoutNode } from './model';
 
 /** Токен свойств */
 export const SATROUT_PARAMS = new InjectionToken<Observable<Observable<any | undefined>>>('SATROUT_PARAMS');
@@ -12,7 +12,7 @@ export const SATROUT_DIRECTION = new InjectionToken<Observable<number[]>>('SATRO
 /** Токен полного пути */
 export const SATROUT_PATH = new InjectionToken<Observable<string | undefined>>('SATROUT_PATH');
 /** Токен маршрутов */
-export const SATROUT_LOADERS = new InjectionToken<RoutLoader[][]>('SATROUT_LOADERS');
+export const SATROUT_LOADERS = new InjectionToken<SATRoutLoader[][]>('SATROUT_LOADERS');
 
 class CContent
 {
@@ -27,6 +27,31 @@ class CContent
   }
 }
 
+/**
+ * @description
+ *
+ * Контейнер маршрута, который динамически заполняется в зависимости от текущего состояния маршрутизатора.
+ *
+ * Каждый контейнер маршрута может иметь уникальное имя, определяемое необязательным атрибутом `name`.
+ *
+ * ```
+ * <sat-router-outlet></sat-router-outlet>
+ * <sat-router-outlet name='left'></sat-router-outlet>
+ * <sat-router-outlet name='right'></sat-router-outlet>
+ * ```
+ *
+ * Именованные контейнеры маршрута будут целями маршрута с тем же именем.
+ * Объект `SATRoutNode` для именованного маршрута имеет свойство `outlet` для идентификации целевого контейнера маршрута:
+ *
+ * `{path: <base-path>, component: <component>, outlet: <target_outlet_name>}`
+ *
+ * @see `SATRouterLinkActiveDirective`
+ * @see `SATRoutNode`
+ * @see `SATRoutLoader`
+ * @ngModule SATRouterModule
+ *
+ * @publicApi
+ */
 @Component({
   selector: 'sat-router-outlet',
   templateUrl: './sat-router-outlet.component.html',
@@ -56,7 +81,7 @@ export class SATRouterOutletComponent implements OnInit, OnDestroy
     private readonly element: ElementRef,
     private readonly s_router: SATRouterService,
     private readonly parentInjector: Injector,
-    //@Inject(SATROUTS) private readonly routsLoader: RoutLoader[][],
+    //@Inject(SATROUTS) private readonly routsLoader: SATRoutLoader[][],
     @SkipSelf() @Optional() protected readonly parent: SATRouterOutletComponent)
   {
     this.content1 = new CContent(parentInjector);
@@ -114,7 +139,7 @@ export class SATRouterOutletComponent implements OnInit, OnDestroy
       return;
     }
 
-    console.assert(!!rt, `Обработчик: "${cp.fullPath}" не существует`);
+    //console.assert(!!rt, `Обработчик: "${cp.fullPath}" не существует`);
 
     if (!!rt?.component)
       this.#update(c1, c2, index, rt.component, cp.params, cp.currentPath, cp.fullPath);
@@ -131,10 +156,10 @@ export class SATRouterOutletComponent implements OnInit, OnDestroy
   }
 
   /** Получить информацию по маршруту */
-  #getRout(routNodes: RoutNode[] | undefined):
+  #getRout(routNodes: SATRoutNode[] | undefined):
     {
       cp: { fullPath: string; params: any; currentPath: number[] } | undefined,
-      rt: RoutLoader | undefined,
+      rt: SATRoutLoader | undefined,
       index: number
     }
   {

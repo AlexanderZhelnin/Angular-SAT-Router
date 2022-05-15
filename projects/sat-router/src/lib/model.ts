@@ -2,22 +2,22 @@ import { Type } from "@angular/core";
 import { LoadChildrenCallback } from "@angular/router";
 
 /** Узел данных маршрута */
-export class RoutNode
+export class SATRoutNode
 {
   /** Путь маршрута */
   path?: string;
-  /** Имя маршрута */
-  name?: string = '';
+  /** Имя контейнера маршрута */
+  outlet?: string = '';
   /** Дочерние маршруты */
-  children?: RoutNode[];
+  children?: SATRoutNode[];
   /** Параметры маршрута*/
   params?: any;
 }
 
 /** Маршрут с загрузчиком */
-export interface RoutLoader
+export interface SATRoutLoader
 {
-  /** Путь маршрута */
+  /** Путь маршрута, если есть именованные контейнеры, то они пишутся `:{outlet}` */
   path: string;
   /** Тип компонента */
   component?: Type<any>;

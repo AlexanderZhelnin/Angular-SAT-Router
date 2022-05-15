@@ -1,7 +1,7 @@
 import { NgModule } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
 import { of } from 'rxjs';
-import { SATRouterModule, RoutNode, SATROUT_LINK_PARSE, SATROUT_LINK_STRINGIFY } from 'sat-router';
+import { SATRouterModule, SATRoutNode, SATROUT_LINK_PARSE, SATROUT_LINK_STRINGIFY } from 'sat-router';
 import { AppComponent } from './app.component';
 import { Root2Component } from './modules/root2.component';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
@@ -85,9 +85,6 @@ export function unzip(s: string)
     SATRouterModule.forRoot(
       ...[0, 1, 2].map(index => ({ path: `root1:${index}`, loadChildren: () => import('./modules/root1.module').then(_ => _.Root1Module) })),
       ...[0, 1, 2].map(index => ({ path: `root2:${index}`, component: Root2Component })),
-      // { path: 'root2', component: Root2Component },
-      // { path: 'root1:rootRight', loadChildren: () => import('./modules/child1/child1.module').then(_ => _.Child1Module) },
-      // { path: 'root1/1', loadChildren: () => import('./modules/child1/child1.module').then(_ => _.Child1Module) }
     )
   ],
   providers: [
@@ -97,17 +94,17 @@ export function unzip(s: string)
       {
         link = /sat-link:([a-z0-9==%"]+)/img.exec(link)?.[1] ?? '';
 
-        if (!link) return of(
+        if (!link) return of<SATRoutNode[]>(
           [0, 1, 2].map(index => ({
             path: 'root1',
-            name: '' + index,
+            outlet: index.toString(),
             params: { index },
             children: [
               {
                 path: 'child1',
                 children: [
-                  { path: 'subChild1', name: '0' },
-                  { path: 'subChild3', name: '1' }
+                  { path: 'subChild1', outlet: '0' },
+                  { path: 'subChild3', outlet: '1' }
                 ]
               }
             ]
@@ -121,7 +118,7 @@ export function unzip(s: string)
     },
     {
       provide: SATROUT_LINK_STRINGIFY,
-      useValue: (rs: RoutNode[]) =>
+      useValue: (rs: SATRoutNode[]) =>
       {
         const s = encodeURIComponent(zip(JSON.stringify(rs)));
         return of(`#sat-link:${s}`);

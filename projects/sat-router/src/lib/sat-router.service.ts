@@ -1,22 +1,22 @@
 import { Subject, Observable, of } from 'rxjs';
-import { RoutNode, RoutLoader } from './model';
+import { SATRoutNode, SATRoutLoader } from './model';
 import { Inject, Injectable, InjectionToken, Optional } from '@angular/core';
 import { routLoaders } from './static-data';
 
 /** Токен свойств */
-export const SATROUT_LINK_PARSE = new InjectionToken<(link: string) => Observable<RoutNode[]> | undefined>('SATROUT_LINK_PARSE');
-export const SATROUT_LINK_STRINGIFY = new InjectionToken<(rs: RoutNode[]) => Observable<string> | undefined>('SATROUT_LINK_STRINGIFY');
+export const SATROUT_LINK_PARSE = new InjectionToken<(link: string) => Observable<SATRoutNode[]> | undefined>('SATROUT_LINK_PARSE');
+export const SATROUT_LINK_STRINGIFY = new InjectionToken<(rs: SATRoutNode[]) => Observable<string> | undefined>('SATROUT_LINK_STRINGIFY');
 
 @Injectable({ providedIn: 'root' })
 export class SATRouterService
 {
-  pathData?: RoutNode[];
+  pathData?: SATRoutNode[];
   changed$ = new Subject<void>();
   #current?: string;
 
   constructor(
-    @Optional() @Inject(SATROUT_LINK_PARSE) private parse: (link: string) => Observable<RoutNode[]> | undefined,
-    @Optional() @Inject(SATROUT_LINK_STRINGIFY) private stringify: (rs: RoutNode[]) => Observable<string> | undefined,
+    @Optional() @Inject(SATROUT_LINK_PARSE) private parse: (link: string) => Observable<SATRoutNode[]> | undefined,
+    @Optional() @Inject(SATROUT_LINK_STRINGIFY) private stringify: (rs: SATRoutNode[]) => Observable<string> | undefined,
   )
   {
     this.parse ??= (link: string) =>
@@ -26,7 +26,7 @@ export class SATRouterService
       return of(JSON.parse(decodeURIComponent(decodeURI(window.atob(link)))));
     };
 
-    this.stringify ??= (rs: RoutNode[]) => of(`#sat-link:${window.btoa(encodeURI(encodeURIComponent(JSON.stringify(rs))))}`);
+    this.stringify ??= (rs: SATRoutNode[]) => of(`#sat-link:${window.btoa(encodeURI(encodeURIComponent(JSON.stringify(rs))))}`);
 
     this.navigate(document.location.hash);
   }
@@ -36,7 +36,7 @@ export class SATRouterService
    *
    * @param routLoader Загрузчик маршрута
    */
-  addRout(routLoader: RoutLoader): void
+  addRout(routLoader: SATRoutLoader): void
   {
     routLoaders.push(routLoader);
   }
@@ -82,17 +82,17 @@ export class SATRouterService
     ])
    * ```
    * */
-  navigate(rout: RoutNode[]): void;
-  navigate(arg: string | RoutNode[]): void
+  navigate(rout: SATRoutNode[]): void;
+  navigate(arg: string | SATRoutNode[]): void
   {
     if (typeof arg === 'string')
     {
       if (this.#current === arg) return;
-      this.parse(arg)?.subscribe({ next: (rs: RoutNode[]) => this.navigate(rs) });
+      this.parse(arg)?.subscribe({ next: (rs: SATRoutNode[]) => this.navigate(rs) });
       return;
     }
 
-    const rs = arg as RoutNode[];
+    const rs = arg as SATRoutNode[];
     this.stringify(rs)?.subscribe({
       next: s =>
       {
