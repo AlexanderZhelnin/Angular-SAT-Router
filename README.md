@@ -98,16 +98,43 @@ providers: [
 
 ## SATRouterService
 Сервис для навигации
-
+### Перейти по строковой ссылке
 ```ts
-
+navigate('root1/1');
+```
+### Перейти по состоянию маршрута
+```ts
+navigate([
+{
+  path: 'root1',
+  params: { name: '123' },
+  children: [
+    {
+      path: '1', params: { id: '321' },
+      children: [
+        { name: 'left', params: { userId: '321' } },
+        { name: 'right', params: { userId: '3212' } },
+      ]
+    }
+  ]
+},
+{
+  path: 'root1',
+  name: 'rootRight',
+  params: ['', 2,],
+  children: [
+    { name: 'left', params: { admin: true } },
+    { name: 'right', params: ['right2', 6] },
+  ]
+}
+])
 ```
 
 ## SATRouterOutletComponent
 Контейнер маршрута, который динамически заполняется в зависимости от текущего состояния маршрутизатора.
 
 Каждый контейнер маршрута может иметь уникальное имя, определяемое необязательным атрибутом `name`.
-```
+```html
 <sat-router-outlet></sat-router-outlet>
 <sat-router-outlet name='left'></sat-router-outlet>
 <sat-router-outlet name='right'></sat-router-outlet>
@@ -120,7 +147,7 @@ providers: [
 
 ## SATRouterLinkActive
 Директива для обнаружения активности маршрута
-```
+```html
 <nav mat-tab-nav-bar>
   <a mat-tab-link (click)="onClick1()" 
      [satRouterLinkActive]="{rout_path}"

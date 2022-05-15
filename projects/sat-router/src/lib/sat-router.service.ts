@@ -51,7 +51,6 @@ export const SAT_LINK_PARSE = new InjectionToken<(link: string) => Observable<SA
         return of(`#sat-link:${s}`);
       }
     }
-
  * ```
  */
 export const SAT_STATE_STRINGIFY = new InjectionToken<(rs: SATStateNode[]) => Observable<string> | undefined>('SATROUT_LINK_STRINGIFY');
