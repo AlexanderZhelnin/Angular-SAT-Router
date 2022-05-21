@@ -32,7 +32,10 @@ import { MainService } from 'src/app/services/main.service';
             first(),
             map(fs => [
               { path: '', component: EditorsComponent },
-              ...fs.map(f => ({ path: f, component: EditorComponent, alwaysNew: true })),
+              ...fs.map(f => ({
+                path: f, component: EditorComponent, alwaysNew: true
+                /* так как компонент не меняется, что бы была анимация указываем флаг alwaysNew */
+              })),
               { path: '*', redirectTo: 'source-code' }
             ]));
 

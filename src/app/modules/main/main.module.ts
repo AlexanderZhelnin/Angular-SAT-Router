@@ -19,16 +19,14 @@ import { MatButtonModule } from '@angular/material/button';
     MatIconModule,
     TabsModule,
     SATRouterModule.create([
-
-      { path: '', component: MainComponent, canUnload: false },
-
+      {
+        path: '', component: MainComponent, canUnload: false
+        /* Для того что бы нагруженный компонент не перестраивался каждый раз когда мы на него возвращаемся, то запрещаем его выгрузку */
+      },
       { path: 'panel-left:left', loadChildren: () => import('../left-panel/left-panel.module').then(_ => _.LeftPanelModule) },
-
       { path: 'editor:center', loadChildren: () => import('../editor/editor.module').then(_ => _.EditorModule) },
-
       { path: 'root1:2', loadChildren: () => import('../root1.module').then(_ => _.Root1Module) },
-      { path: 'root2:2', component: Root2Component },
-
+      { path: 'root2:2', component: Root2Component }
     ])
   ]
 })

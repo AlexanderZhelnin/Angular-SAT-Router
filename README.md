@@ -54,7 +54,8 @@
             first(),
             map(fs => [
               { path: '', component: EditorsComponent },
-              ...fs.map(f => ({ path: f, component: EditorComponent, alwaysNew: true }))
+              ...fs.map(f => ({ path: f, component: EditorComponent, alwaysNew: true
+              /* так как компонент не меняется, что бы была анимация указываем флаг alwaysNew */ }))
             ]));
 
       }, deps: [MainService]
@@ -71,7 +72,7 @@ providers: [
     provide: SAT_LINK_PARSE,
     useValue: (link: string) =>
     {
-      link = /sat-link:([a-z0-9==%"]+)/img.exec(link)?.[1] ?? '';
+      link = /sat-link:([a-z0-9==%_\.\-"]+)/img.exec(link)?.[1] ?? '';
 
       if (!link) return of<SATStateNode[]>(
         [0, 1, 2].map(index => ({

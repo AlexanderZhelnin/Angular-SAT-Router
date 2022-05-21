@@ -24,11 +24,26 @@
 ## SATRouterModule
 Добавляет директивы и сервисы для навигации внутри приложения между представлениями, определенными в приложении. Вы можете импортировать этот NgModule несколько раз, по одному разу, для каждого модуля с отложенной загрузкой.
 ```ts
-
 @NgModule({
   declarations: [
-    //
+    MainComponent
   ],
+  imports: [
+    CommonModule,
+    SATRouterModule.create([
+      { path: '', component: MainComponent, canUnload: false
+      /* Для того что бы нагруженный компонент не перестраивался каждый раз когда мы на него возвращаемся, то запрещаем его выгрузку */ },
+      { path: 'panel-left:left', loadChildren: () => import('../left-panel/left-panel.module').then(_ => _.LeftPanelModule) },
+      { path: 'editor:center', loadChildren: () => import('../editor/editor.module').then(_ => _.EditorModule) },
+      { path: 'root1:2', loadChildren: () => import('../root1.module').then(_ => _.Root1Module) },
+      { path: 'root2:2', component: Root2Component }
+    ])
+  ]
+})
+```
+
+```ts
+@NgModule({  
   imports: [    
     SATRouterModule.create(
       // Загрузка определённого компонента
@@ -54,8 +69,8 @@
             first(),
             map(fs => [
               { path: '', component: EditorsComponent },
-              ...fs.map(f => ({ path: f, component: EditorComponent, alwaysNew: true })),
-              { path: '*', redirectTo: 'source-code' }
+              ...fs.map(f => ({ path: f, component: EditorComponent, alwaysNew: true
+              /* так как компонент не меняется, что бы была анимация указываем флаг alwaysNew */ })),
             ]));
 
       }, deps: [MainService]
@@ -72,7 +87,7 @@ providers: [
     provide: SAT_LINK_PARSE,
     useValue: (link: string) =>
     {
-      link = /sat-link:([a-z0-9==%"]+)/img.exec(link)?.[1] ?? '';
+      link = /sat-link:([a-z0-9==%_\.\-"]+)/img.exec(link)?.[1] ?? '';
 
       if (!link) return of<SATStateNode[]>(
         [0, 1, 2].map(index => ({

@@ -11,10 +11,7 @@ import { SATRouterModule } from 'sat-router';
   imports: [
     CommonModule,
     SATRouterModule.create([
-      {
-        path: '', component: Root1Component,
-        //canUnload: false,
-      },
+      { path: '', component: Root1Component },
       { path: 'child1', loadChildren: () => import('./child1/child1.module').then(_ => _.Child1Module) },
       { path: '*', redirectTo: 'child1' }]
     )
