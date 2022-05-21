@@ -1,0 +1,5 @@
+<ng-scrollbar #scrollable [visibility] = "'hover'">
+  <div class="content">
+  <code #code contenteditable (input)="onInput($event)" (keydown)="onKeyDown($event)"></code>
+  </div>
+</ng-scrollbar>

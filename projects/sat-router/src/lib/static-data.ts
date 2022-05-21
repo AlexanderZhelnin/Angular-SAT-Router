@@ -1,51 +1,44 @@
-import { Observable, Subject } from 'rxjs';
-import { SATStateNode, SATRoutLoader } from './model';
+import { Observable, of } from 'rxjs';
+import { SATStateNode, SATRouteLoader } from './model';
 
+export type canActivateDeActivateResult = {
+  canDeactivate: boolean,
+  children: canActivateDeActivateResult[]
+};
 
-/** Для проверки можно ли переходить к маршруту */
-export const canActivate = { canActivate$: new Subject<SATStateNode[]>(), canActivateResult$: new Subject<boolean>() };
-/** Для проверки можно ли покинуть маршруту */
-export const canDeactivate = { canDeactivate$: new Subject<SATStateNode[]>(), canDeactivateResult$: new Subject<boolean>() };
-
-//export const routLoaders = new Map<string, { component?: Type<any>, loadChildren?: LoadChildrenCallback }>();
-export const routLoaders: SATRoutLoader[] = [];
-//new Map<string, { component?: Type<any>, loadChildren?: LoadChildrenCallback }>();
-
-/** Получить реальный маршрута из иерархии */
-export function getRealPath(path: string, pathData?: SATStateNode[]): { fullPath: string, params: any, currentPath: number[] } | undefined
+export interface ICanActivateDeActivate
 {
-  const masPath = path?.split('/');
-  if ((masPath?.length ?? 0) === 0) return undefined;
-
-  let result: string | undefined = '';
-  let params: any;
-  let currentPath: number[] = [];
-
-  masPath.reduce((ds, name) =>
-  {
-    const index = ds?.findIndex(item => (item.outlet ?? '') === name) ?? -1;
-    if (index < 0)
-    {
-      result += '/*';
-      params = undefined;
-      return [];
-    }
-
-    currentPath.push(index);
-    const r = ds![index];
-
-    result += `/${(r?.path ?? '') + ((!!r?.outlet) ? `:${r.outlet}` : '')}`;
-    params = r.params;
-    return r?.children ?? []
-  }, pathData)
-
-  return (result === undefined)
-    ? undefined
-    : {
-      fullPath: (result[0] === '/')
-        ? result.substring(1)
-        : result,
-      params,
-      currentPath
-    };
+  parent: ICanActivateDeActivate | undefined;
+  childrenOutlet: ICanActivateDeActivate[],
+  canDeActivateAsync(rs: SATStateNode[]): Promise<canActivateDeActivateResult>
+  //canActivateAsync(rs: SATStateNode[]): Promise<canActivateDeActivateResult>
+  restoreState(cdr: canActivateDeActivateResult, ds: SATStateNode[]): void
 }
+
+
+export const allCanActivateDeactivated: ICanActivateDeActivate[] = [];
+/** Для проверки можно ли покинуть маршруту, с преобразование данных */
+export async function canDeactivate(rs: SATStateNode[])
+{
+  const roots = [...allCanActivateDeactivated.filter(cd => !cd.parent)];
+
+  for (const cd of roots)
+  {
+    const cdr = await cd.canDeActivateAsync(rs);
+    cd.restoreState(cdr, rs);
+  }
+}
+
+export const routeLoaders: SATRouteLoader[] = [];
+
+export const translator = {
+
+  stringify: (rs: SATStateNode[]): Observable<string> | undefined => of(`#sat-link:${window.btoa(encodeURI(encodeURIComponent(JSON.stringify(rs))))}`),
+
+  parse: (link: string) =>
+  {
+    link = /sat-link:([a-z0-9==]+)/img.exec(link)?.[1] ?? '';
+    if (!link) return undefined;
+    return of(JSON.parse(decodeURIComponent(decodeURI(window.atob(link)))));
+  }
+};

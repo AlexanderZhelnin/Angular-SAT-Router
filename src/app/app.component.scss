@@ -1,20 +1,4 @@
-:host{
-  display: flex;
+sat-router-outlet {
   width: 100%;
   height: 100%;
-  gap: 10px;
-  background: black;
-
-  :nth-child(1) {
-    min-width: 25%;
-  }
-  :nth-child(2){
-    flex-grow: 1;
-  }
-  :nth-child(3) {
-    min-width: 25%;
-  }
-
 }
-
-

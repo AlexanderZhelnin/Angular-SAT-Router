@@ -1,0 +1,22 @@
+<sat-router-outlet #outlet></sat-router-outlet>
+<nav mat-tab-nav-bar class="mat-tab-group-inverted-header">
+  <a mat-tab-link
+    (click)="onActivated('files')"
+    [satRouterLinkActive]="'files'"
+    [routerOutlet]="outlet"
+    >
+    Навигация
+  </a>
+
+  <a mat-tab-link
+    (click)="onActivated('git')"
+    [satRouterLinkActive]="'git'"
+    [routerOutlet]="outlet">
+    git
+  </a>
+  </nav>
+
+
+
+
+

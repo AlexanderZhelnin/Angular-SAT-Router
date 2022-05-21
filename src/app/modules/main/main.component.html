@@ -1,0 +1,12 @@
+<mat-toolbar color="primary">
+  <button mat-icon-button (click)="onAuthClick()">
+    <mat-icon>menu</mat-icon>
+  </button>
+  <span>Тестовое приложение SATRouter</span>
+</mat-toolbar>
+
+<div class="content">
+  <sat-router-outlet name="left"></sat-router-outlet>
+  <sat-router-outlet name="center"></sat-router-outlet>
+  <app-tabs [index]="2"></app-tabs>
+</div>

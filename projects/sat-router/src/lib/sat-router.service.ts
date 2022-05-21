@@ -1,7 +1,7 @@
-import { Subject, Observable, of } from 'rxjs';
-import { SATStateNode, SATRoutLoader } from './model';
+import { Subject, Observable, of, BehaviorSubject, firstValueFrom } from 'rxjs';
+import { SATStateNode } from './model';
 import { Inject, Injectable, InjectionToken, Optional } from '@angular/core';
-import { routLoaders } from './static-data';
+import { canDeactivate, translator } from './static-data';
 
 /**
  * Токен представляющий функцию преобразования из строки в полное состояние маршрута
@@ -55,7 +55,6 @@ export const SAT_LINK_PARSE = new InjectionToken<(link: string) => Observable<SA
  */
 export const SAT_STATE_STRINGIFY = new InjectionToken<(rs: SATStateNode[]) => Observable<string> | undefined>('SATROUT_LINK_STRINGIFY');
 
-
 /**
  * Сервис для навигации
  *
@@ -64,39 +63,22 @@ export const SAT_STATE_STRINGIFY = new InjectionToken<(rs: SATStateNode[]) => Ob
 @Injectable({ providedIn: 'root' })
 export class SATRouterService
 {
-  #state?: SATStateNode[];
+  private _state?: SATStateNode[];
   /** Текущее состояние маршрута */
-  get state() { return this.#state ;}
+  get state() { return this._state; }
 
   /** Событие изменения текущего состояния маршрута */
   readonly changed$ = new Subject<void>();
-  #current?: string;
+  private _current?: string;
 
   constructor(
-    @Optional() @Inject(SAT_LINK_PARSE) private parse: (link: string) => Observable<SATStateNode[]> | undefined,
-    @Optional() @Inject(SAT_STATE_STRINGIFY) private stringify: (rs: SATStateNode[]) => Observable<string> | undefined,
+    @Optional() @Inject(SAT_LINK_PARSE) parse: (link: string) => Observable<SATStateNode[]> | undefined,
+    @Optional() @Inject(SAT_STATE_STRINGIFY) stringify: (rs: SATStateNode[]) => Observable<string> | undefined,
   )
   {
-    this.parse ??= (link: string) =>
-    {
-      link = /sat-link:([a-z0-9==]+)/img.exec(link)?.[1] ?? '';
-      if (!link) return undefined;
-      return of(JSON.parse(decodeURIComponent(decodeURI(window.atob(link)))));
-    };
-
-    this.stringify ??= (rs: SATStateNode[]) => of(`#sat-link:${window.btoa(encodeURI(encodeURIComponent(JSON.stringify(rs))))}`);
-
+    if (!!parse) translator.parse = parse;
+    if (!!stringify) translator.stringify = stringify;
     this.navigate(document.location.hash);
-  }
-
-  /**
-   * Добавление маршрута с загрузчиком
-   *
-   * @param routLoader Загрузчик маршрута
-   */
-  addRout(routLoader: SATRoutLoader): void
-  {
-    routLoaders.push(routLoader);
   }
 
   //#region navigate
@@ -108,7 +90,7 @@ export class SATRouterService
    * navigate('root1/1')
    * ```
    */
-  navigate(link: string): void;
+  navigate(link: string): Promise<void>;
   /**
    * Перейти по состоянию маршрута
    *
@@ -140,32 +122,63 @@ export class SATRouterService
     ])
    * ```
    * */
-  navigate(state: SATStateNode[]): void;
-  navigate(arg: string | SATStateNode[]): void
+  navigate(state: SATStateNode[]): Promise<void>;
+  async navigate(arg: string | SATStateNode[])
   {
     if (typeof arg === 'string')
     {
-      if (this.#current === arg) return;
-      this.parse(arg)?.subscribe({ next: (rs: SATStateNode[]) => this.navigate(rs) });
+      if (this._current === arg) return;
+      translator.parse(arg)?.subscribe({ next: (rs: SATStateNode[]) => this.navigate(rs) });
       return;
     }
 
     const rs = arg as SATStateNode[];
-    this.stringify(rs)?.subscribe({
-      next: s =>
-      {
-        if (s === this.#current) return;
 
-        //canActivate.canActivate$.
+    await canDeactivate(rs);
 
-        this.#state = rs;
-        this.#current = s;
-        this.changed$.next();
+    const s = await firstValueFrom(translator.stringify(rs) ?? new BehaviorSubject<string | undefined>(undefined));
+    if (!s || s === this._current) return;
 
-        history.replaceState(null, '', s);
-      }
-    });
+    this._state = rs;
+    this._current = s;
+    this.changed$.next();
+
+    history.replaceState(null, '', s);
   }
   //#endregion
+
+  async updateHistoryAsync()
+  {
+    const s = await firstValueFrom(translator.stringify(this.state ?? []) ?? new BehaviorSubject<string | undefined>(undefined));
+    if (!!s) history.replaceState(null, '', s);
+  }
+
+  /**
+   * Копия маршрута с выделением текущего уровня
+   *
+   * @param address Адрес текущего уровня
+   * @return {*}
+   */
+  cloneState(address: number[]): { state: SATStateNode[]; currentNode?: SATStateNode; }
+  {
+    const state = JSON.parse(JSON.stringify(this.state ?? [])) as SATStateNode[];
+    const currentNode = this.getNode(state, address);
+
+    return { state, currentNode }
+  }
+
+  getNode(state: SATStateNode[], address: number[], withOutLast: boolean = false): SATStateNode | undefined
+  {
+    let currentNodes: SATStateNode[] = state;
+    let count = address.length - 1;
+    if (withOutLast) count--;
+    for (let i = 0; i < count; i++)
+      currentNodes = currentNodes?.[address[i]]?.children ?? [];
+
+    return address.length > 0
+      ? currentNodes[address[count]]
+      : undefined;
+  }
+
 
 }

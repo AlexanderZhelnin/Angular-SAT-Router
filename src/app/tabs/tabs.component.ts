@@ -1,6 +1,6 @@
-import { Observable } from 'rxjs';
+import { filter, first, firstValueFrom, Observable } from 'rxjs';
 import { Component, OnInit, ChangeDetectionStrategy, Input, Optional, Inject } from '@angular/core';
-import { SATStateNode, SATRouterOutletComponent, SATRouterService, SATROUT_DIRECTION } from 'sat-router';
+import { SATStateNode, SATRouterOutletComponent, SATRouterService, SAT_ROUTE_ADDRESS } from 'sat-router';
 
 @Component({
   selector: 'app-tabs',
@@ -15,16 +15,13 @@ export class TabsComponent implements OnInit
   @Input() level: number = 0;
   @Input() path: string = 'root';
 
-  #saveState?: SATStateNode;
-  #currentPath: number[] = [];
+  private saveState?: SATStateNode;
 
   constructor(
-    @Optional() private sro: SATRouterOutletComponent,
-    private readonly s_rout: SATRouterService,
-    @Optional() @Inject(SATROUT_DIRECTION) currentPath: Observable<number[] | undefined>
+    private readonly s_router: SATRouterService,
+    @Optional() @Inject(SAT_ROUTE_ADDRESS) private address: Observable<number[] | undefined> | undefined,
   )
   {
-    currentPath?.subscribe({ next: cp => this.#currentPath = cp ?? [] });
   }
 
   ngOnInit(): void
@@ -36,29 +33,29 @@ export class TabsComponent implements OnInit
 
   get isVertical() { return this.path === 'subChild'; }
 
-  #cloneData(): { state: SATStateNode[]; currentNodes: SATStateNode[]; }
+  async onClick1()
   {
-    const state = JSON.parse(JSON.stringify(this.s_rout.state ?? [])) as SATStateNode[];
-    let currentNodes: SATStateNode[] = state;
-    this.#currentPath.forEach(i => { currentNodes = currentNodes[i].children ?? []; });
-    return { state, currentNodes }
-  }
+    if (!this.address) return;
+    const address = await firstValueFrom(this.address.pipe(first(), filter(_ => !!_)));
 
-  onClick1(): void
-  {
-    const cloned = this.#cloneData();
-    if (cloned.currentNodes[this.index].path === this.path1) return;
+    if (!address) return;
 
-    if (!!this.sro)
-      cloned.currentNodes[this.index] = {
+    const cloned = this.s_router.cloneState(address);
+
+    if (!cloned.currentNode?.children) return;
+
+    if (cloned.currentNode?.children?.[this.index]?.path === this.path1) return;
+
+    if (this.path !== 'root')
+      cloned.currentNode.children[this.index] = {
         path: this.path1,
         outlet: '' + this.index,
         params: { index: this.index },
       };
-    else if (!!this.#saveState)
-      cloned.currentNodes[this.index] = this.#saveState;
+    // else if (!!this.saveState)
+    //   cloned.currentNode.children[this.index] = this.saveState;
     else
-      cloned.currentNodes[this.index] = {
+      cloned.currentNode.children[this.index] = {
         path: this.path1,
         outlet: '' + this.index,
         params: { index: this.index },
@@ -73,22 +70,29 @@ export class TabsComponent implements OnInit
         ]
       };
 
-    this.s_rout.navigate(cloned.state);
+    this.s_router.navigate(cloned.state);
   }
 
-  onClick2(): void
+  async onClick2()
   {
-    const cloned = this.#cloneData();
-    if (cloned.currentNodes[this.index].path === this.path2) return;
+    if (!this.address) return;
+    const address = await firstValueFrom(this.address.pipe(first(), filter(_ => !!_)));
 
-    this.#saveState = cloned.currentNodes[this.index];
+    if (!address) return;
 
-    cloned.currentNodes[this.index] = {
+    const cloned = this.s_router.cloneState(address);
+
+    if (!cloned.currentNode?.children) return;
+
+    if (cloned.currentNode?.children?.[this.index]?.path === this.path2) return;
+
+    this.saveState = cloned.currentNode.children[this.index];
+
+    cloned.currentNode.children[this.index] = {
       path: this.path2,
       outlet: '' + this.index,
       params: { index: this.index },
     }
-
-    this.s_rout.navigate(cloned.state);
+    this.s_router.navigate(cloned.state);
   }
 }

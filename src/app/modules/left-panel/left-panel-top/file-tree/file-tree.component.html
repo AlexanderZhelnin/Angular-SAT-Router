@@ -1,0 +1,5 @@
+<mat-selection-list #list [multiple]="false" (selectionChange)="onSelected($event)">
+  <mat-list-option *ngFor="let file of s_main.files$ | async" [value]="file">
+    {{file}}
+  </mat-list-option>
+</mat-selection-list>

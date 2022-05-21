@@ -1,10 +1,41 @@
-:host{
+:host {
   display: block;
   position: relative;
   overflow: hidden;
+
+  &.sat_route_debug {
+    //box-shadow: 0px 0px 0px 2px red inset;
+    //outline: 5px solid red;
+    border: 2px solid red;
+    padding: 1rem;
+
+    &::after {
+      content: attr(data-sat_route_path);
+      color: #333;
+      background-color: #fc0;
+      font-size: 0.7rem;
+      position: absolute;
+      left: 0;
+      top: 0;
+      padding: 0px 7px 1px 7px;
+      z-index: 500;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .content {
+      top: 1rem;
+      left: 1rem;
+      right: 1rem;
+      bottom: 1rem;
+    }
+
+  }
 }
-.content{
-  top:0;
+
+.content {
+  top: 0;
   left: 0;
   right: 0;
   bottom: 0;

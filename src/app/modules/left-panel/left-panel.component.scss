@@ -1,0 +1,19 @@
+:host {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  background-color: darkgray;
+  width: 100%;
+}
+
+:nth-child(1) {
+  height: calc(50% - 2.5px);
+  width: 100%;
+  background-color: white;
+}
+
+:nth-child(2) {
+  width: 100%;
+  flex-grow: 1;
+  background-color: white;
+}

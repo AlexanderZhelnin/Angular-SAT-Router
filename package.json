@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "scripts": {
     "start": "npm-run-all clear --parallel start:**",
-    "start:satAuth": "ng build sat-router --watch",
+    "start:sat-router": "ng build sat-router --watch",
     "start:app": "node ./scripts/waite-for-sat-router.js && ng serve",
     "clear": "node ./scripts/clear.js",
     "version": "cd ./projects/sat-router && npm version patch && cd ../../",
@@ -21,6 +21,9 @@
     "@angular/platform-browser": "~13.1.0",
     "@angular/platform-browser-dynamic": "~13.1.0",
     "@angular/router": "~13.1.0",
+    "@material/density": "^14.0.0",
+    "highlight.js": "^11.5.1",
+    "ngx-scrollbar": "^9.0.2",
     "rxjs": "~7.4.0",
     "tslib": "^2.3.0",
     "zone.js": "~0.11.4"

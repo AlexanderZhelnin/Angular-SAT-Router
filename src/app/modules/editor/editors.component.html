@@ -1,0 +1,15 @@
+<nav mat-tab-nav-bar>
+
+  <a *ngFor="let editor of editors$ | async"
+    mat-tab-link
+    (click)="onActivated(editor)"
+    [satRouterLinkActive]="editor.name"
+    [routerOutlet]="outlet">
+    {{editor.name}}
+  </a>
+
+  <button mat-button (click)="onAddClick()">+</button>
+
+
+</nav>
+<sat-router-outlet #outlet></sat-router-outlet>

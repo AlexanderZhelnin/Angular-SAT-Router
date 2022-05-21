@@ -1,10 +1,11 @@
+import { Observable } from 'rxjs';
 import { CommonModule } from '@angular/common';
 import { ModuleWithProviders, NgModule } from '@angular/core';
-import { SafeStylePipe } from './pipes/safe-style.pipe';
-import { SATRoutLoader } from './model';
-import { SATRouterOutletComponent, SATROUT_LOADERS } from './sat-router-outlet.component';
-import { routLoaders } from './static-data';
+import { SATRouteLoader } from './model';
+import { SATRouterOutletComponent, SAT_ROUTE_LOADERS } from './sat-router-outlet.component';
+//import { routeLoaders } from './static-data';
 import { SATRouterLinkActiveDirective } from './directives/sat-router-link-active.directive';
+import { routeLoaders } from './static-data';
 
 
 /**
@@ -17,12 +18,12 @@ import { SATRouterLinkActiveDirective } from './directives/sat-router-link-activ
  * для каждого модуля с отложенной загрузкой.
  * Существует два способа регистрации маршрутов при импорте этого модуля
  *
- * * `forRoot()` метод создает `NgModule`, который содержит все директивы и заданные
- * загрузчики маршрутов для корневого модуля.
+ * * `create()` метод создает `NgModule`, который содержит все директивы и заданные
+ * загрузчики маршрутов.
  *
  * ```ts
  *   imports: [
- *     SATRouterModule.forRoot(
+ *     SATRouterModule.create(
  *       // Загрузка определённого компонента
  *       { path: 'root1', component: RootComponent },
  *       // Динамически загружаемый модуль
@@ -31,29 +32,11 @@ import { SATRouterLinkActiveDirective } from './directives/sat-router-link-activ
  *     )
  *   ],
  * ```
- * * `forChild()` метод создает `NgModule`, который содержит все директивы и заданные
- * загрузчики маршрутов для дочерних модулей.
- *
- * ```ts
- *   imports: [
- *     SATRouterModule.forChildren(
- *       // корневой маршрут модуля
- *       { path: '', component: Child1Component },
- *       // маршрут для дочернего контейнера маршрутов
- *       { path: 'subChild1', component: SubChild1 },
- *       { path: 'subChild2', component: SubChild2 },
- *       // Динамически загружаемый модуль
- *       { path: 'subChild2', loadChildren: () =>
- *         import('./modules/sub-child2.module').then(_ => _.SubChild2dModule) }
- *     )
- *   ],
- * ```
  *
  * @publicApi
  */
 @NgModule({
   declarations: [
-    SafeStylePipe,
     SATRouterOutletComponent,
     SATRouterLinkActiveDirective
   ],
@@ -67,23 +50,13 @@ import { SATRouterLinkActiveDirective } from './directives/sat-router-link-activ
 })
 export class SATRouterModule
 {
-  static forChildren(...routs: SATRoutLoader[]): ModuleWithProviders<SATRouterModule>
+  static create(routs: SATRouteLoader[] | Observable<SATRouteLoader[]>): ModuleWithProviders<SATRouterModule>
   {
     return {
       ngModule: SATRouterModule, providers: [
-        { provide: SATROUT_LOADERS, useValue: routs, multi: true }
+        { provide: SAT_ROUTE_LOADERS, useValue: routs }
       ]
     }
   }
 
-  static forRoot(...routs: SATRoutLoader[]): ModuleWithProviders<SATRouterModule>
-  {
-    routLoaders.push(...routs);
-
-    return {
-      ngModule: SATRouterModule, providers: [
-        { provide: SATROUT_LOADERS, useValue: routs, multi: true }
-      ]
-    }
-  }
 }

@@ -1,8 +1,8 @@
 import { Subscription, BehaviorSubject } from 'rxjs';
-import { AfterContentInit, ChangeDetectorRef, Directive, ElementRef, Input, OnChanges, OnDestroy, Renderer2, SimpleChanges } from '@angular/core';
-import { SATRouterService } from '../sat-router.service';
-import { SATRouterOutletComponent } from '../sat-router-outlet.component';
+import { AfterContentInit, Directive, EventEmitter, Injector, Input, OnChanges, OnDestroy, Output, SimpleChanges } from '@angular/core';
 
+import { SATRouterOutletComponent } from '../sat-router-outlet.component';
+import { MatTabLink } from '@angular/material/tabs';
 
 /**
  * Директива для обнаружения активности маршрута
@@ -10,17 +10,13 @@ import { SATRouterOutletComponent } from '../sat-router-outlet.component';
  * <nav mat-tab-nav-bar>
  *   <a mat-tab-link (click)="onClick1()"
  *      [satRouterLinkActive]="{rout_path}"
- *      [routerOutlet]="outlet"
- *      #rla1="satRouterLinkActive"
- *      [active]="rla1.isActive$ | async">
+ *      [routerOutlet]="outlet">
  *     {{Имя_закладки}}
  *   </a>
  *
  *   <a mat-tab-link (click)="onClick2()"
  *      [satRouterLinkActive]="{rout_path}"
- *      [routerOutlet]="outlet"
- *      #rla2="satRouterLinkActive"
- *      [active]="rla2.isActive$ | async">
+ *      [routerOutlet]="outlet">
  *     {{Имя_закладки}}
  *   </a>
  * </nav>
@@ -38,42 +34,50 @@ export class SATRouterLinkActiveDirective implements OnChanges, OnDestroy, After
   @Input()
   satRouterLinkActive?: string
 
+  @Output()
+  activated = new EventEmitter<string>();
+
   //#region routerOutlet
-  #roSubs?: Subscription;
-  #routerOutlet?: SATRouterOutletComponent;
-  get routerOutlet(): SATRouterOutletComponent | undefined { return this.#routerOutlet; }
+  private _roSubs?: Subscription;
+  private _routerOutlet?: SATRouterOutletComponent;
+  get routerOutlet(): SATRouterOutletComponent | undefined { return this._routerOutlet; }
   @Input()
   set routerOutlet(value: SATRouterOutletComponent | undefined)
   {
-    this.#routerOutlet = value;
+    this._routerOutlet = value;
 
-    this.#roSubs?.unsubscribe();
-    this.#roSubs = value?.currentRout$.subscribe({ next: r => this.#update() });
+    this._roSubs?.unsubscribe();
+    this._roSubs = value?.currentRoute$.subscribe({ next: r => this.update() });
   }
   //#endregion
+
+  constructor(private mtl: MatTabLink)
+  {
+
+  }
 
   /** @nodoc */
   ngAfterContentInit(): void
   {
-    this.#update();
+    this.update();
   }
 
   /** @nodoc */
   ngOnChanges(changes: SimpleChanges): void
   {
-    this.#update();
+    this.update();
   }
 
   /** @nodoc */
   ngOnDestroy(): void
   {
-    this.#roSubs?.unsubscribe();
+    this._roSubs?.unsubscribe();
   }
 
   /** Проверка обновления активности */
-  #update(): void
+  private update(): void
   {
-    const masPath = this.routerOutlet?.currentRout$?.value?.path?.split('/');
+    const masPath = this.routerOutlet?.currentRoute$?.value?.routePath?.pathAddress?.fullPath?.split('/');
     if (!masPath) return;
 
     const path = masPath[masPath?.length - 1];
@@ -82,6 +86,12 @@ export class SATRouterLinkActiveDirective implements OnChanges, OnDestroy, After
     if (this.isActive$.value === isActive) return;
 
     this.isActive$.next(isActive);
+
+    this.mtl.active = isActive;
+
+
+    if (isActive)
+      this.activated.emit(this.routerOutlet?.currentRoute$?.value?.routePath?.pathAddress?.fullPath);
   }
 
 }

@@ -1,11 +1,12 @@
 import { NgModule } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
-import { of } from 'rxjs';
-import { SATRouterModule, SATStateNode, SAT_LINK_PARSE, SAT_STATE_STRINGIFY } from 'sat-router';
+import { Observable, of } from 'rxjs';
+import { SATRouterModule, SATStateNode, SAT_LINK_PARSE, SAT_ROUTE_CONFIGURATION, SAT_STATE_STRINGIFY } from 'sat-router';
 import { AppComponent } from './app.component';
 import { Root2Component } from './modules/root2.component';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
-import { TabsModule } from './tabs/tabs.module';
+import { AuthComponent } from './modules/auth/auth.component';
+import { MatButtonModule } from '@angular/material/button';
 
 export function zip(s: string): string
 {
@@ -76,44 +77,80 @@ export function unzip(s: string)
 @NgModule({
   declarations: [
     AppComponent,
+    AuthComponent,
     Root2Component
   ],
   imports: [
     BrowserModule,
     BrowserAnimationsModule,
-    TabsModule,
-    SATRouterModule.forRoot(
-      ...[0, 1, 2].map(index => ({ path: `root1:${index}`, loadChildren: () => import('./modules/root1.module').then(_ => _.Root1Module) })),
-      ...[0, 1, 2].map(index => ({ path: `root2:${index}`, component: Root2Component })),
-    )
+    MatButtonModule,
+    SATRouterModule.create([
+      { path: 'auth', component: AuthComponent },
+      { path: 'main', loadChildren: () => import('./modules/main/main.module').then(_ => _.MainModule) },
+
+      // { path: 'left:0', loadChildren: () => import('./modules/left-panel/left-panel.module').then(_ => _.LeftPanelModule) },
+
+      // { path: 'editor:1', loadChildren: () => import('./modules/editor/editor.module').then(_ => _.EditorModule) },
+
+      // { path: 'root1:2', loadChildren: () => import('./modules/root1.module').then(_ => _.Root1Module) },
+      // { path: 'root2:2', component: Root2Component },
+
+    ])
   ],
   providers: [
     {
       provide: SAT_LINK_PARSE,
       useValue: (link: string) =>
       {
-        link = /sat-link:([a-z0-9==%"]+)/img.exec(link)?.[1] ?? '';
+        link = /sat-link:([a-z0-9==%_\.\-"]+)/img.exec(link)?.[1] ?? '';
 
-        if (!link) return of<SATStateNode[]>(
-          [0, 1, 2].map(index => ({
-            path: 'root1',
-            outlet: index.toString(),
-            params: { index },
+        if (!link) return of<SATStateNode[]>([
+          {
+            path: 'main',
             children: [
               {
-                path: 'child1',
+                path: 'panel-left',
+                outlet: 'left',
                 children: [
-                  { path: 'subChild1', outlet: '0' },
-                  { path: 'subChild3', outlet: '1' }
+                  {
+                    path: 'top',
+                    outlet: 'top',
+                    children: [
+                      { path: 'files' }
+                    ]
+                  },
+                  { path: 'bottom', outlet: 'bottom', }
+                ]
+              },
+
+              {
+                path: 'editor',
+                outlet: 'center',
+                children: [
+                  { path: 'Program.cs', params: { name: 'Program.cs' } }
+                ]
+              },
+
+              {
+                path: 'root1',
+                outlet: '2',
+                params: { index: 2 },
+                children: [
+                  {
+                    path: 'child1',
+                    children: [
+                      { path: 'subChild1', outlet: '0' },
+                      { path: 'subChild3', outlet: '1' }
+                    ]
+                  }
                 ]
               }
             ]
-          }))
+          }]
         );
 
         const s = unzip(decodeURIComponent(link));
         return of(JSON.parse(s));
-        //return of();
       }
     },
     {
@@ -123,7 +160,9 @@ export function unzip(s: string)
         const s = encodeURIComponent(zip(JSON.stringify(rs)));
         return of(`#sat-link:${s}`);
       }
-    }
+    },
+    { provide: SAT_ROUTE_CONFIGURATION, useValue: { debug: true } }
+
   ],
   bootstrap: [AppComponent]
 })

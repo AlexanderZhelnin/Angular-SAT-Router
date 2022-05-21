@@ -9,19 +9,18 @@
 * [SATRouterOutletComponent](#satrouteroutletcomponent)
 * [SATRouterService](#satrouterservice)
 * [SATRouterLinkActive](#satrouterlinkactive)
+* [Debug](#debug)
 
 ## SATRouterModule
 Добавляет директивы и сервисы для навигации внутри приложения между представлениями, определенными в приложении. Вы можете импортировать этот NgModule несколько раз, по одному разу, для каждого модуля с отложенной загрузкой.
-Существует два способа регистрации маршрутов при импорте этого модуля
-* `forRoot()` метод создает `NgModule`, который содержит все директивы и заданные загрузчики маршрутов для корневого модуля.
 ```ts
-// Корневой модуль
+
 @NgModule({
   declarations: [
     //
   ],
   imports: [    
-    SATRouterModule.forRoot(
+    SATRouterModule.create(
       // Загрузка определённого компонента
       { path: 'root1', component: RootComponent },
       // Динамически загружаемый модуль
@@ -29,25 +28,30 @@
     )
   ],
 ```
-* `forChild()` метод создает `NgModule`, который содержит все директивы и заданные заданные загрузчики  маршрутов
-для дочерних модулей.
+Указанная регистрация на самом деле регистрирует модуль и провайдер с маршрутами.
+Вы можете зарегистрировать и по отдельности, например для обеспечения динамических маршрутов
 ```ts
-// Дочерний динамически загружаемый модуль
-@NgModule({
-  declarations: [
-    //
-  ],
+@NgModule({ 
   imports: [    
-    SATRouterModule.forChildren(
-      // корневой маршрут модуля
-      { path: '', component: Child1Component },
-      // маршрут для дочернего контейнера маршрутов
-      { path: 'subChild1', component: SubChild1 },
-      { path: 'subChild2', component: SubChild2 },
-      // Динамически загружаемый модуль
-      { path: 'subChild2', loadChildren: () => import('./modules/sub-child2.module').then(_ => _.SubChild2dModule) }
-    )
+    SATRouterModule
   ],
+  providers: [
+    {
+      provide: SAT_ROUTE_LOADERS, useFactory: (s_files: MainService) =>
+      {
+        return s_files.files$
+          .pipe(
+            first(),
+            map(fs => [
+              { path: '', component: EditorsComponent },
+              ...fs.map(f => ({ path: f, component: EditorComponent, alwaysNew: true })),
+              { path: '*', redirectTo: 'source-code' }
+            ]));
+
+      }, deps: [MainService]
+    }
+  ]
+})
 ```
 
 ## SAT_LINK_PARSE
@@ -147,23 +151,27 @@ navigate([
 
 ## SATRouterLinkActive
 Директива для обнаружения активности маршрута
+
 ```html
 <nav mat-tab-nav-bar>
   <a mat-tab-link (click)="onClick1()" 
      [satRouterLinkActive]="{rout_path}"
-     [routerOutlet]="outlet" 
-     #rla1="satRouterLinkActive"
-     [active]="rla1.isActive$ | async">
+     [routerOutlet]="outlet">
     {{tab1_header}}
   </a>
 
   <a mat-tab-link (click)="onClick2()" 
      [satRouterLinkActive]="{rout_path}"
-     [routerOutlet]="outlet"
-     #rla2="satRouterLinkActive"
-     [active]="rla2.isActive$ | async">
+     [routerOutlet]="outlet">
     {{tab2_header}}
   </a>
 </nav>
 <sat-router-outlet #outlet ></sat-router-outlet>
+```
+
+## Debug
+Предусмотрен режим отладки с показом SATRouterOutletComponent и текущем состоянием маршрута
+для этого необходимо зарегистрировать провайдер
+```ts
+{ provide: SAT_ROUTE_CONFIGURATION, useValue: { debug: true } }
 ```

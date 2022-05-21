@@ -10,10 +10,13 @@ import { SATRouterModule } from 'sat-router';
   ],
   imports: [
     CommonModule,
-    SATRouterModule.forChildren(
-      { path: '', component: Root1Component },
+    SATRouterModule.create([
+      {
+        path: '', component: Root1Component,
+        //canUnload: false,
+      },
       { path: 'child1', loadChildren: () => import('./child1/child1.module').then(_ => _.Child1Module) },
-      { path: '*', redirectTo: 'child1' },
+      { path: '*', redirectTo: 'child1' }]
     )
   ],
   providers: []
