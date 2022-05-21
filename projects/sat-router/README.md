@@ -9,6 +9,7 @@
 - [x] Поддерживает динамическую загрузку модулей
 - [x] Множество дополнительных вариантов
 
+![пример демо режима](./SATRouter.gif)
 
 [Исходный код](https://github.com/AlexanderZhelnin/Angular-SAT-Router)
 
@@ -184,4 +185,4 @@ navigate([
 ```ts
 { provide: SAT_ROUTE_CONFIGURATION, useValue: { debug: true } }
 ```
-![пример демо режима](debug.png)
+![пример демо режима](./debug.png)

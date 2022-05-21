@@ -161,7 +161,7 @@ export function unzip(s: string)
         return of(`#sat-link:${s}`);
       }
     },
-    { provide: SAT_ROUTE_CONFIGURATION, useValue: { debug: true } }
+    // { provide: SAT_ROUTE_CONFIGURATION, useValue: { debug: true } }
 
   ],
   bootstrap: [AppComponent]
