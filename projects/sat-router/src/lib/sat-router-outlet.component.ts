@@ -1,7 +1,7 @@
 import { Component, ElementRef, InjectionToken, Injector, Input, OnInit, Optional, SkipSelf, ɵcreateInjector as createInjector, OnDestroy, ViewChild, Renderer2, ChangeDetectorRef, ViewContainerRef, Inject, InjectFlags } from '@angular/core';
 import { Observable, BehaviorSubject, Subscription, firstValueFrom } from 'rxjs';
 import { SATRouterService } from './sat-router.service';
-import { ISATRouteResolver, SATStateNode, ISATCanDeActivate, type RoutePath, ISATRouteConfiguration } from './model';
+import { ISATRouteResolver, ISATStateNode, ISATCanDeActivate, type RoutePath, ISATRouteConfiguration } from './model';
 import { allCanActivateDeactivated, routeResolvers, type canActivateDeActivateResult } from './static-data';
 
 /** Токен свойств */
@@ -24,14 +24,14 @@ type Route = { routePath: RoutePath, routeResolver: RouteResolver };
 type RouteAndInjector = Route & { injector?: Injector };
 
 /** Получить реальный маршрута из иерархии */
-function getRealPath(path: string, pathData?: SATStateNode[]): RoutePath | undefined
+function getRealPath(path: string, pathData?: ISATStateNode[]): RoutePath | undefined
 {
   const masPath = path?.split('/');
   if ((masPath?.length ?? 0) === 0) return undefined;
 
   let result: string | undefined = '';
   let address: number[] = [];
-  let stateNode: SATStateNode | undefined;
+  let stateNode: ISATStateNode | undefined;
 
   masPath.reduce((ds, name) =>
   {
@@ -290,7 +290,7 @@ export class SATRouterOutletComponent implements OnInit, OnDestroy
   }
 
   /** Получить информацию по маршруту */
-  private async getRouteAsync(routeNodes: SATStateNode[] | undefined): Promise<Route | undefined>
+  private async getRouteAsync(routeNodes: ISATStateNode[] | undefined): Promise<Route | undefined>
   {
     let path = this.name;
     let parent = this.parentOutlet;
@@ -621,7 +621,7 @@ export class SATRouterOutletComponent implements OnInit, OnDestroy
   }
 
   /** Можно ли деактивировать текущий маршрут, в результате будет дерево, соответствующее узлам состояний и признаком возможности деактивировать*/
-  async canDeActivateAsync(ds: SATStateNode[]): Promise<canActivateDeActivateResult>
+  async canDeActivateAsync(ds: ISATStateNode[]): Promise<canActivateDeActivateResult>
   {
     let result: canActivateDeActivateResult = { canDeactivate: true, children: [] };
 
@@ -688,12 +688,12 @@ export class SATRouterOutletComponent implements OnInit, OnDestroy
   }
 
   /** Восстановить состояния для узлов с невозможностью перехода, начиная от начала к концу */
-  restoreState(cdr: canActivateDeActivateResult, ds: SATStateNode[]): void
+  restoreState(cdr: canActivateDeActivateResult, ds: ISATStateNode[]): void
   {
     if (cdr.canDeactivate) return;
     const c = this.previewContent;
 
-    let currentNodes: SATStateNode[] = ds;
+    let currentNodes: ISATStateNode[] = ds;
     const address = c.routeAndInjector?.routePath?.pathAddress?.address ?? [];
     for (let i = 0; i < address.length - 1; i++)
       currentNodes = currentNodes[address[i]]?.children ?? [];

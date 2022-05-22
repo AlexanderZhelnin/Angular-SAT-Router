@@ -1,7 +1,7 @@
 import { NgModule } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
 import { Observable, of } from 'rxjs';
-import { SATRouterModule, SATStateNode, SAT_LINK_PARSE, SAT_ROUTE_CONFIGURATION, SAT_STATE_STRINGIFY } from 'sat-router';
+import { SATRouterModule, ISATStateNode, SAT_LINK_PARSE, SAT_ROUTE_CONFIGURATION, SAT_STATE_STRINGIFY } from 'sat-router';
 import { AppComponent } from './app.component';
 import { Root2Component } from './modules/root2.component';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
@@ -104,7 +104,7 @@ export function unzip(s: string)
       {
         link = /sat-link:([a-z0-9==%_\.\-"]+)/img.exec(link)?.[1] ?? '';
 
-        if (!link) return of<SATStateNode[]>([
+        if (!link) return of<ISATStateNode[]>([
           {
             path: 'main',
             children: [
@@ -155,7 +155,7 @@ export function unzip(s: string)
     },
     {
       provide: SAT_STATE_STRINGIFY,
-      useValue: (rs: SATStateNode[]) =>
+      useValue: (rs: ISATStateNode[]) =>
       {
         const s = encodeURIComponent(zip(JSON.stringify(rs)));
         return of(`#sat-link:${s}`);

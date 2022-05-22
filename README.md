@@ -25,8 +25,10 @@
 
 ## SATRouterModule
 Добавляет директивы и сервисы для навигации внутри приложения между представлениями, определенными в приложении. Вы можете импортировать этот NgModule несколько раз, по одному разу, для каждого модуля с отложенной загрузкой.
-```ts
 
+смотри раздел [ISATRouteResolver](#isatrouteresolver)
+
+```ts
 @NgModule({
   declarations: [
     //
@@ -76,7 +78,7 @@ providers: [
     {
       link = /sat-link:([a-z0-9==%_\.\-"]+)/img.exec(link)?.[1] ?? '';
 
-      if (!link) return of<SATStateNode[]>(
+      if (!link) return of<ISATStateNode[]>(
         [0, 1, 2].map(index => ({
           path: 'root1',
           outlet: index.toString(),
@@ -104,7 +106,7 @@ providers: [
 providers: [
  {
    provide: SAT_STATE_STRINGIFY,
-   useValue: (rs: SATStateNode[]) =>
+   useValue: (rs: ISATStateNode[]) =>
    {
      const s = encodeURIComponent(zip(JSON.stringify(rs)));
      return of(`#sat-link:${s}`);
@@ -169,7 +171,7 @@ this.s_router.navigate(cloned.state);
 ```
 Именованные контейнеры маршрута будут целями маршрута с тем же именем.
 
-Объект `SATStateNode` для именованного маршрута имеет свойство `outlet` для идентификации целевого контейнера маршрута:
+Объект [ISATStateNode](#isatstatenode) для именованного маршрута имеет свойство `outlet` для идентификации целевого контейнера маршрута:
 ```ts{path: <base-path>, component: <component>, outlet: <target_outlet_name>}```
 
 ## SATRouterLinkActive
@@ -227,13 +229,51 @@ activated: EventEmitter<string>
 
 ## Типы 
 ### ISATStateNode
-### ISATRouteResolver
-### ISATCanActivate
-интерфейс имеет одну функцию, функция может быть асинхронной 
 ```ts
-canActivate(state: RoutePath): Observable<boolean> | Promise<boolean> | boolean;
+interface ISATStateNode
+{
+  /** Путь маршрута */
+  path?: string;
+  /** Имя контейнера маршрута */
+  outlet?: string;
+  /** Дочерние маршруты */
+  children?: ISATStateNode[];
+  /** Параметры маршрута*/
+  params?: any;
+}
+ts
+### ISATRouteResolver
+Интерфейс распознавателя части маршрута
+```ts
+interface ISATRouteResolver
+{
+  /** Путь маршрута, если есть именованные контейнеры, то они пишутся `{путь}:{outlet}` */
+  path: string;
+  /** Тип компонента */
+  component?: Type<any>;
+  /** Загрузчик динамического модуля */
+  loadChildren?: LoadChildrenCallback;
+  /** Перенаправление */
+  redirectTo?: string;
+  /** Можно ли активировать */
+  canActivate?: ISATCanActivate | ISATCanActivate[];
+  /** Можно ли деактивировать */
+  canDeactivate?: ISATCanDeActivate | ISATCanDeActivate[];
+  /** Можно ли выгружать */
+  canUnload?: boolean;
+  /** Не проверять на изменение компонента */
+  alwaysNew?: boolean;
+}
 ```
-пример
+### ISATCanActivate
+Интерфейс имеет одну функцию, функция может быть асинхронной 
+```ts
+interface ISATCanActivate
+{
+  canActivate(state: RoutePath): Observable<boolean> | Promise<boolean> | boolean;
+}
+```
+Пример:
 ```ts
 SATRouterModule.create([
   { path: '', component: Child1Component },  
@@ -248,16 +288,19 @@ SATRouterModule.create([
         alert(`нельзя перейти в маршрут "subChild4:1"`)
         return false;
       }
-    }
+    },
     // при неудачной проверке на активацию перейти на маршрут
-    , redirectTo: 'subChild3:1'
+    redirectTo: 'subChild3:1'
   }
 ])
 ```
 ### ISATCanDeActivate
 интерфейс имеет одну функцию, функция может быть асинхронной 
 ```ts
-canDeActivate(component: any, state: RoutePath): Observable<boolean> | Promise<boolean> | boolean;
+interface ISATCanDeActivate
+{
+  canDeActivate(component: any, state: RoutePath): Observable<boolean> | Promise<boolean> | boolean;
+}
 ```
 пример
 ```ts
@@ -269,7 +312,7 @@ SATRouterModule.create([
       // тут пример асинхронной проверки реализованной через Promise
       canDeActivate: async (component: any, state: RoutePath) =>
       {
-        alert(`нельзя покинуть маршрут "subChild2:0"`)
+        alert('нельзя покинуть маршрут "subChild2:0"')
         return false;
       }
     }

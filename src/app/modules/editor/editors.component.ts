@@ -1,6 +1,6 @@
 import { Component, Inject, OnInit, Optional, OnDestroy, ViewChild } from '@angular/core';
-import { Observable, map, Subscription, BehaviorSubject, filter } from 'rxjs';
-import { SATRouterOutletComponent, SATRouterService, SATStateNode, SAT_ROUTE_ADDRESS, SAT_ROUTE_PATH } from 'sat-router';
+import { Observable, map, Subscription, BehaviorSubject } from 'rxjs';
+import { SATRouterOutletComponent, SATRouterService, SAT_ROUTE_ADDRESS, SAT_ROUTE_PATH } from 'sat-router';
 import { MainService } from 'src/app/services/main.service';
 import { IEditor } from './editor.component';
 

@@ -1,5 +1,5 @@
 import { Observable, of } from 'rxjs';
-import { SATStateNode, ISATRouteResolver } from './model';
+import { ISATStateNode, ISATRouteResolver } from './model';
 
 export type canActivateDeActivateResult = {
   canDeactivate: boolean,
@@ -10,15 +10,15 @@ export interface ICanActivateDeActivate
 {
   parentOutlet: ICanActivateDeActivate | undefined;
   childrenOutlet: ReadonlyArray<ICanActivateDeActivate>,
-  canDeActivateAsync(rs: SATStateNode[]): Promise<canActivateDeActivateResult>
+  canDeActivateAsync(rs: ISATStateNode[]): Promise<canActivateDeActivateResult>
   //canActivateAsync(rs: SATStateNode[]): Promise<canActivateDeActivateResult>
-  restoreState(cdr: canActivateDeActivateResult, ds: SATStateNode[]): void
+  restoreState(cdr: canActivateDeActivateResult, ds: ISATStateNode[]): void
 }
 
 
 export const allCanActivateDeactivated: ICanActivateDeActivate[] = [];
 /** Для проверки можно ли покинуть маршруту, с преобразование данных */
-export async function canDeactivate(rs: SATStateNode[])
+export async function canDeactivate(rs: ISATStateNode[])
 {
   const roots = [...allCanActivateDeactivated.filter(cd => !cd.parentOutlet)];
 
@@ -33,7 +33,7 @@ export const routeResolvers: ISATRouteResolver[] = [];
 
 export const translator = {
 
-  stringify: (rs: SATStateNode[]): Observable<string> | undefined => of(`#sat-link:${window.btoa(encodeURI(encodeURIComponent(JSON.stringify(rs))))}`),
+  stringify: (rs: ISATStateNode[]): Observable<string> | undefined => of(`#sat-link:${window.btoa(encodeURI(encodeURIComponent(JSON.stringify(rs))))}`),
 
   parse: (link: string) =>
   {

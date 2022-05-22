@@ -3,14 +3,14 @@ import { LoadChildrenCallback } from "@angular/router";
 import { Observable } from "rxjs";
 
 /** Узел данных маршрута */
-export class SATStateNode
+export interface ISATStateNode
 {
   /** Путь маршрута */
   path?: string;
   /** Имя контейнера маршрута */
-  outlet?: string = '';
+  outlet?: string;
   /** Дочерние маршруты */
-  children?: SATStateNode[];
+  children?: ISATStateNode[];
   /** Параметры маршрута*/
   params?: any;
 }
@@ -22,7 +22,7 @@ export interface ISATRouteResolver
   path: string;
   /** Тип компонента */
   component?: Type<any>;
-  /** Загрузчик модуля */
+  /** Загрузчик динамического модуля */
   loadChildren?: LoadChildrenCallback;
   /** Перенаправление */
   redirectTo?: string;
@@ -34,7 +34,7 @@ export interface ISATRouteResolver
   canUnload?: boolean;
   /** Не проверять на изменение компонента */
   alwaysNew?: boolean;
-};
+}
 
 /** Интерфейс защитника активации */
 export interface ISATCanActivate
@@ -45,7 +45,7 @@ export interface ISATCanActivate
 /** Адрес маршрута */
 export type PathAddress = { fullPath: string, address: number[] };
 /** Данные маршрута */
-export type RoutePath = { pathAddress: PathAddress, stateNode: SATStateNode };
+export type RoutePath = { pathAddress: PathAddress, stateNode: ISATStateNode };
 
 /** Интерфейс защитника деактивации */
 export interface ISATCanDeActivate

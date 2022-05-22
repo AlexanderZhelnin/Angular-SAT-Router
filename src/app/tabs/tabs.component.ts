@@ -1,6 +1,6 @@
 import { filter, first, firstValueFrom, Observable } from 'rxjs';
 import { Component, OnInit, ChangeDetectionStrategy, Input, Optional, Inject } from '@angular/core';
-import { SATStateNode, SATRouterOutletComponent, SATRouterService, SAT_ROUTE_ADDRESS } from 'sat-router';
+import { ISATStateNode, SATRouterService, SAT_ROUTE_ADDRESS } from 'sat-router';
 
 @Component({
   selector: 'app-tabs',
@@ -15,7 +15,7 @@ export class TabsComponent implements OnInit
   @Input() level: number = 0;
   @Input() path: string = 'root';
 
-  private saveState?: SATStateNode;
+  private saveState?: ISATStateNode;
 
   constructor(
     private readonly s_router: SATRouterService,

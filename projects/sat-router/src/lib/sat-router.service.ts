@@ -1,5 +1,5 @@
 import { Subject, Observable, of, BehaviorSubject, firstValueFrom } from 'rxjs';
-import { SATStateNode } from './model';
+import { ISATStateNode } from './model';
 import { Inject, Injectable, InjectionToken, Optional } from '@angular/core';
 import { canDeactivate, translator } from './static-data';
 
@@ -38,7 +38,7 @@ import { canDeactivate, translator } from './static-data';
  *   },
  * ```
  */
-export const SAT_LINK_PARSE = new InjectionToken<(link: string) => Observable<SATStateNode[]> | undefined>('SAT_LINK_PARSE');
+export const SAT_LINK_PARSE = new InjectionToken<(link: string) => Observable<ISATStateNode[]> | undefined>('SAT_LINK_PARSE');
 /**
  * Токен представляющий функцию преобразования из полного состояния маршрута в строку
  * ```ts
@@ -54,7 +54,7 @@ export const SAT_LINK_PARSE = new InjectionToken<(link: string) => Observable<SA
  * ```
  * @publicApi
  */
-export const SAT_STATE_STRINGIFY = new InjectionToken<(rs: SATStateNode[]) => Observable<string> | undefined>('SAT_STATE_STRINGIFY');
+export const SAT_STATE_STRINGIFY = new InjectionToken<(rs: ISATStateNode[]) => Observable<string> | undefined>('SAT_STATE_STRINGIFY');
 
 /**
  * Сервис для навигации
@@ -64,7 +64,7 @@ export const SAT_STATE_STRINGIFY = new InjectionToken<(rs: SATStateNode[]) => Ob
 @Injectable({ providedIn: 'root' })
 export class SATRouterService
 {
-  private _state?: SATStateNode[];
+  private _state?: ISATStateNode[];
   /** Текущее состояние маршрута */
   get state() { return this._state; }
 
@@ -73,8 +73,8 @@ export class SATRouterService
   private _current?: string;
 
   constructor(
-    @Optional() @Inject(SAT_LINK_PARSE) parse: (link: string) => Observable<SATStateNode[]> | undefined,
-    @Optional() @Inject(SAT_STATE_STRINGIFY) stringify: (rs: SATStateNode[]) => Observable<string> | undefined,
+    @Optional() @Inject(SAT_LINK_PARSE) parse: (link: string) => Observable<ISATStateNode[]> | undefined,
+    @Optional() @Inject(SAT_STATE_STRINGIFY) stringify: (rs: ISATStateNode[]) => Observable<string> | undefined,
   )
   {
     if (!!parse) translator.parse = parse;
@@ -123,17 +123,17 @@ export class SATRouterService
     ])
    * ```
    * */
-  navigate(state: SATStateNode[]): Promise<void>;
-  async navigate(arg: string | SATStateNode[])
+  navigate(state: ISATStateNode[]): Promise<void>;
+  async navigate(arg: string | ISATStateNode[])
   {
     if (typeof arg === 'string')
     {
       if (this._current === arg) return;
-      translator.parse(arg)?.subscribe({ next: (rs: SATStateNode[]) => this.navigate(rs) });
+      translator.parse(arg)?.subscribe({ next: (rs: ISATStateNode[]) => this.navigate(rs) });
       return;
     }
 
-    const rs = arg as SATStateNode[];
+    const rs = arg as ISATStateNode[];
 
     await canDeactivate(rs);
 
@@ -165,9 +165,9 @@ export class SATRouterService
    * @param address Адрес текущего уровня
    * @return {*}
    */
-  cloneState(address: number[]): { state: SATStateNode[]; currentNode?: SATStateNode; }
+  cloneState(address: number[]): { state: ISATStateNode[]; currentNode?: ISATStateNode; }
   {
-    const state = JSON.parse(JSON.stringify(this.state ?? [])) as SATStateNode[];
+    const state = JSON.parse(JSON.stringify(this.state ?? [])) as ISATStateNode[];
     const currentNode = this.getNode(state, address);
 
     return { state, currentNode }
@@ -181,9 +181,9 @@ export class SATRouterService
    * @param [withOutLast=false] - не учитывать последний узел
    * @return {*} Узел маршрута
    */
-  getNode(state: SATStateNode[], address: number[], withOutLast: boolean = false): SATStateNode | undefined
+  getNode(state: ISATStateNode[], address: number[], withOutLast: boolean = false): ISATStateNode | undefined
   {
-    let currentNodes: SATStateNode[] = state;
+    let currentNodes: ISATStateNode[] = state;
     let count = address.length - 1;
     if (withOutLast) count--;
     for (let i = 0; i < count; i++)
