@@ -15,8 +15,8 @@ export class SATStateNode
   params?: any;
 }
 
-/** Маршрут с загрузчиком */
-export interface ISATRouteLoader
+/** Распознаватель маршрута */
+export interface ISATRouteResolver
 {
   /** Путь маршрута, если есть именованные контейнеры, то они пишутся `:{outlet}` */
   path: string;

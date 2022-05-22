@@ -3,7 +3,7 @@ import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { EditorComponent } from './editor.component';
 import { EditorsComponent } from './editors.component';
-import { SATRouterModule, SAT_ROUTE_LOADERS } from 'sat-router';
+import { SATRouterModule, SAT_ROUTE_RESOLVERS } from 'sat-router';
 import { MatTabsModule } from '@angular/material/tabs';
 import { MatButtonModule } from '@angular/material/button';
 import { HttpClientModule } from '@angular/common/http';
@@ -25,7 +25,7 @@ import { MainService } from 'src/app/services/main.service';
   ],
   providers: [
     {
-      provide: SAT_ROUTE_LOADERS, useFactory: (s_files: MainService) =>
+      provide: SAT_ROUTE_RESOLVERS, useFactory: (s_files: MainService) =>
       {
         return s_files.files$
           .pipe(

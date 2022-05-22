@@ -1,5 +1,5 @@
 import { Observable, of } from 'rxjs';
-import { SATStateNode, ISATRouteLoader } from './model';
+import { SATStateNode, ISATRouteResolver } from './model';
 
 export type canActivateDeActivateResult = {
   canDeactivate: boolean,
@@ -29,7 +29,7 @@ export async function canDeactivate(rs: SATStateNode[])
   }
 }
 
-export const routeLoaders: ISATRouteLoader[] = [];
+export const routeResolvers: ISATRouteResolver[] = [];
 
 export const translator = {
 

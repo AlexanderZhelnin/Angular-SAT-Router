@@ -49,7 +49,7 @@
   ],
   providers: [
     {
-      provide: SAT_ROUTE_LOADERS, useFactory: (s_files: MainService) =>
+      provide: SAT_ROUTE_RESOLVERS, useFactory: (s_files: MainService) =>
       {
         return s_files.files$
           .pipe(
@@ -207,12 +207,12 @@ activated: EventEmitter<string>
 ### canActivate
 Проводит проверку можно ли перейти к маршруту
 
-Представлен в виде свойства загрузчика `canActivate` и интерфейсом [ISATCanActivate](#isatcanactivate)
+Представлен в виде свойства распознавателя маршрута [ISATRouteResolver](#isatrouteresolver) `canActivate` и интерфейсом [ISATCanActivate](#isatcanactivate)
 может принимать одиночный объект SATCanActivate или массив SATCanActivate[]
 
 ### canDeactivate
 Проводит проверку можно ли покинуть маршрут
-Представлен в виде свойства загрузчика `canDeactivate` и интерфейсом [ISATCanDeActivate](#isatcandeactivate)
+Представлен в виде свойства распознавателя маршрута [ISATRouteResolver](#isatrouteresolver) `canDeactivate` и интерфейсом [ISATCanDeActivate](#isatcandeactivate)
 может принимать одиночный объект SATCanDeActivate или массив SATCanDeActivate[]
 
 ## Debug
@@ -227,7 +227,7 @@ activated: EventEmitter<string>
 
 ## Типы 
 ### ISATStateNode
-### ISATRouteLoader
+### ISATRouteResolver
 ### ISATCanActivate
 интерфейс имеет одну функцию, функция может быть асинхронной 
 ```ts

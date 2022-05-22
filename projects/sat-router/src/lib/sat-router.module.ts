@@ -1,11 +1,9 @@
 import { Observable } from 'rxjs';
 import { CommonModule } from '@angular/common';
 import { ModuleWithProviders, NgModule } from '@angular/core';
-import { ISATRouteLoader } from './model';
-import { SATRouterOutletComponent, SAT_ROUTE_LOADERS } from './sat-router-outlet.component';
-//import { routeLoaders } from './static-data';
+import { ISATRouteResolver } from './model';
+import { SATRouterOutletComponent, SAT_ROUTE_RESOLVERS } from './sat-router-outlet.component';
 import { SATRouterLinkActiveDirective } from './directives/sat-router-link-active.directive';
-import { routeLoaders } from './static-data';
 
 
 /**
@@ -19,7 +17,7 @@ import { routeLoaders } from './static-data';
  * Существует два способа регистрации маршрутов при импорте этого модуля
  *
  * * `create()` метод создает `NgModule`, который содержит все директивы и заданные
- * загрузчики маршрутов.
+ * распознаватели маршрутов.
  *
  * ```ts
  *   imports: [
@@ -50,11 +48,11 @@ import { routeLoaders } from './static-data';
 })
 export class SATRouterModule
 {
-  static create(routs: ISATRouteLoader[] | Observable<ISATRouteLoader[]>): ModuleWithProviders<SATRouterModule>
+  static create(routs: ISATRouteResolver[] | Observable<ISATRouteResolver[]>): ModuleWithProviders<SATRouterModule>
   {
     return {
       ngModule: SATRouterModule, providers: [
-        { provide: SAT_ROUTE_LOADERS, useValue: routs }
+        { provide: SAT_ROUTE_RESOLVERS, useValue: routs }
       ]
     }
   }

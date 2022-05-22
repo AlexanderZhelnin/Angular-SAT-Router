@@ -185,7 +185,7 @@ public class SettingsWatchdog
         _settings = settings;
         _settings.OnChange((s) =>
         {
-            Console.WriteLine("Напрмер перезагружаем микросервис");
+            Console.WriteLine("Например перезагружаем микросервис");
         });
     }
 }
@@ -299,7 +299,7 @@ public class Startup
                         ValidateAudience = false
                     };
                     config.RequireHttpsMetadata = false;
-                    // Сервер OAUTH 2.0 
+                    // Сервер OAUTH 2.0
                     config.Authority = Configuration["Authentication:OAUTH_PATH"];
                     // Проверка для проекта
                     config.Audience = Configuration["Authentication:OAUTH_CLIENT_ID"];
@@ -332,10 +332,10 @@ public class Startup
         //.AddJsonOptions(o =>
         //{
         //    o.JsonSerializerOptions.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
-        //}); 
+        //});
         #endregion
 
-        #region Региструруем OpenApi 
+        #region Региструруем OpenApi
         services.AddSwaggerGen(c =>
                 {
                     c.SwaggerDoc("v1", new OpenApiInfo
@@ -348,7 +348,7 @@ public class Startup
                             Name = "Александр Желнин"
                         }
                         //, License =
-                        //, TermsOfService = 
+                        //, TermsOfService =
                     });
 
                     c.SchemaFilter<EnumSchemeFilter>();
@@ -428,7 +428,7 @@ public class Startup
         //            //      .UseSnakeCaseNamingConvention()
         //            //      .EnableSensitiveDataLogging(true);
         //            // });
-        //#endif 
+        //#endif
         #endregion
 
         services.AddHttpResultSerializer(batchSerialization: HttpResultSerialization.JsonArray);
@@ -504,13 +504,13 @@ public class Startup
                         }
                         return er;
                     })
-        #endregion           
+        #endregion
             ;
         #endregion
 
         #region Регистрируем фоновые задачи
         //services.AddHostedService<BookAVG>();
-        //services.AddHostedService<TCPServer>(); 
+        //services.AddHostedService<TCPServer>();
         #endregion
 
         services.AddHealthChecks()

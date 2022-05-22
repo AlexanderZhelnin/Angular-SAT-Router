@@ -1,8 +1,8 @@
 import { Component, ElementRef, InjectionToken, Injector, Input, OnInit, Optional, SkipSelf, ɵcreateInjector as createInjector, OnDestroy, ViewChild, Renderer2, ChangeDetectorRef, ViewContainerRef, Inject, InjectFlags } from '@angular/core';
 import { Observable, BehaviorSubject, Subscription, firstValueFrom } from 'rxjs';
 import { SATRouterService } from './sat-router.service';
-import { ISATRouteLoader, SATStateNode, ISATCanDeActivate, type RoutePath, ISATRouteConfiguration } from './model';
-import { allCanActivateDeactivated, routeLoaders, translator, type canActivateDeActivateResult } from './static-data';
+import { ISATRouteResolver, SATStateNode, ISATCanDeActivate, type RoutePath, ISATRouteConfiguration } from './model';
+import { allCanActivateDeactivated, routeResolvers, type canActivateDeActivateResult } from './static-data';
 
 /** Токен свойств */
 export const SAT_ROUTE_PARAMS = new InjectionToken<Observable<any | undefined>>('SAT_ROUTE_PARAMS');
@@ -10,17 +10,17 @@ export const SAT_ROUTE_PARAMS = new InjectionToken<Observable<any | undefined>>(
 export const SAT_ROUTE_ADDRESS = new InjectionToken<Observable<number[]>>('SAT_ROUTE_ADDRESS');
 /** Токен полного пути */
 export const SAT_ROUTE_PATH = new InjectionToken<Observable<string | undefined>>('SAT_ROUTE_PATH');
-/** Токен загрузчиков */
-export const SAT_ROUTE_LOADERS = new InjectionToken<ISATRouteLoader[] | BehaviorSubject<ISATRouteLoader[]>>('SAT_ROUTE_LOADERS');
+/** Токен распознавателей маршрутов */
+export const SAT_ROUTE_RESOLVERS = new InjectionToken<ISATRouteResolver[] | BehaviorSubject<ISATRouteResolver[]>>('SAT_ROUTE_RESOLVERS');
 
 /** Токен конфигурации */
 export const SAT_ROUTE_CONFIGURATION = new InjectionToken<ISATRouteConfiguration>('SAT_ROUTE_CONFIGURATION');
 
-/** Загрузчик с индексом в массиве загрузчиков */
-type RouteLoader = ISATRouteLoader & { index: number };
-/** Данные маршрута с загрузчиком */
-type Route = { routePath: RoutePath, routeLoader: RouteLoader };
-/** Данные маршрута с загрузчиком и инжектором */
+/** Распознаватель маршрута с индексом в массиве распознавателей */
+type RouteResolver = ISATRouteResolver & { index: number };
+/** Данные маршрута с распознавателем */
+type Route = { routePath: RoutePath, routeResolver: RouteResolver };
+/** Данные маршрута с распознавателем и инжектором */
 type RouteAndInjector = Route & { injector?: Injector };
 
 /** Получить реальный маршрута из иерархии */
@@ -87,11 +87,11 @@ class CContent
   component: any;
   /** Полные данные маршрута */
   routeAndInjector?: RouteAndInjector
-  /** Observable загруженного компонента необходим для отслеживания изменения параметров */
+  /** Observable параметров загруженного компонента */
   params$ = new BehaviorSubject<any>(undefined);
-  /** Observable загруженного компонента необходим для отслеживания изменения пути */
+  /** Observable пути загруженного компонента */
   path$ = new BehaviorSubject<string | undefined>(undefined);
-  /** Observable загруженного компонента необходим для отслеживания изменения данных получения адреса данных маршрута */
+  /** Observable адреса состояния загруженного компонента */
   address$ = new BehaviorSubject<number[]>([]);
 
   constructor(
@@ -110,7 +110,7 @@ class CContent
  *
  * @property name - Необходимо для идентификации контейнера в маршруте
  * @property orientation - Служит для анимации перехода
- * @property currentRoute$ - Текущие данные маршрута с загрузчиком *
+ * @property currentRoute$ - Текущие данные маршрута с распознавателем *
  * @property childrenOutlet - Дочерние контейнеры маршрута
  * @property parentOutlet - Родительский контейнер маршрута
  * @property level - Уровень вложенности
@@ -128,7 +128,7 @@ class CContent
  *
  * @see `SATRouterLinkActiveDirective`
  * @see `SATStateNode`
- * @see `SATRouteLoader`
+ * @see `SATRouteResolver`
  * @ngModule SATRouterModule
  *
  * @publicApi
@@ -261,12 +261,12 @@ export class SATRouterOutletComponent implements OnInit, OnDestroy
   /** Загрузка или обновление компонента */
   private async loadUpdate(r: Route, c1: CContent, c2: CContent)
   {
-    if (!!r.routeLoader.loadChildren)
+    if (!!r.routeResolver.loadChildren)
     {
       const rm = await this.loadModuleAsync(r);
       this.update(c1, c2, rm);
     }
-    else if (!!r.routeLoader.component)
+    else if (!!r.routeResolver.component)
       this.update(c1, c2, r);
     else
       this.clear();
@@ -304,16 +304,16 @@ export class SATRouterOutletComponent implements OnInit, OnDestroy
 
     if (!rp) return undefined;
 
-    await this.rootLoadersAsync(this.parentInjector);
+    await this.rootResolversAsync(this.parentInjector);
 
-    let index = routeLoaders.findIndex(rl => rl.path === rp.pathAddress.fullPath);
+    let index = routeResolvers.findIndex(rl => rl.path === rp.pathAddress.fullPath);
     if (index < 0)
     {
       const masFullPath = rp.pathAddress.fullPath.split('/');
       const sPath = masFullPath.slice(0, -1).join('/');
       const anyPath = sPath + ((!!sPath) ? `/*` : '*');
 
-      index = routeLoaders.findIndex(rl => rl.path === anyPath);
+      index = routeResolvers.findIndex(rl => rl.path === anyPath);
       index = await this.checkCanLoadAndRedirectAsync(index, rp);
     }
     else
@@ -321,26 +321,26 @@ export class SATRouterOutletComponent implements OnInit, OnDestroy
 
     return (index < 0)
       ? undefined
-      : { routePath: rp, routeLoader: { ...routeLoaders[index], index } };
+      : { routePath: rp, routeResolver: { ...routeResolvers[index], index } };
   }
 
   /** Проверяем маршрут на возможность загрузки и перенаправление на другой маршрут */
   private async checkCanLoadAndRedirectAsync(index: number, rp: RoutePath)
   {
     if (index < 0) return -1;
-    let rl = routeLoaders[index];
+    let rl = routeResolvers[index];
     if (!!rl.component || !!rl.loadChildren)
     {
       if (!await this.canActivateAsync(rl, rp))
       {
         if (!!rl.redirectTo)
         {
-          index = routeLoaders.findIndex(rll => rll.path === rl.redirectTo);
+          index = routeResolvers.findIndex(rll => rll.path === rl.redirectTo);
           index = await this.checkCanLoadAndRedirectAsync(index, rp);
           if (index >= 0)
           {
 
-            if (this.previewContent.routeAndInjector?.routePath?.pathAddress?.fullPath === routeLoaders[index].path)
+            if (this.previewContent.routeAndInjector?.routePath?.pathAddress?.fullPath === routeResolvers[index].path)
             {
               rp.pathAddress = this.previewContent.routeAndInjector.routePath.pathAddress;
               rp.stateNode = this.previewContent.routeAndInjector.routePath.stateNode;
@@ -350,7 +350,7 @@ export class SATRouterOutletComponent implements OnInit, OnDestroy
             }
             else
             {
-              rp.pathAddress.fullPath = routeLoaders[index].path;
+              rp.pathAddress.fullPath = routeResolvers[index].path;
 
               const masPath = rp.pathAddress.fullPath.split('/');
               const [path, outlet] = masPath[masPath.length - 1].split(':');
@@ -373,9 +373,9 @@ export class SATRouterOutletComponent implements OnInit, OnDestroy
     {
       if (!!rl.redirectTo)
       {
-        index = routeLoaders.findIndex(rll => rll.path === rl.redirectTo);
+        index = routeResolvers.findIndex(rll => rll.path === rl.redirectTo);
         index = await this.checkCanLoadAndRedirectAsync(index, rp);
-        if (index >= 0) rp.pathAddress.fullPath = routeLoaders[index].path;
+        if (index >= 0) rp.pathAddress.fullPath = routeResolvers[index].path;
         return index;
       }
 
@@ -398,7 +398,7 @@ export class SATRouterOutletComponent implements OnInit, OnDestroy
     }
     const ri = rAi!;
 
-    if (c2.routeAndInjector?.routeLoader.component === ri.routeLoader.component &&
+    if (c2.routeAndInjector?.routeResolver.component === ri.routeResolver.component &&
       JSON.stringify(c2.params$.value) === JSON.stringify(ri.routePath.stateNode?.params))
     {
       if (!!c2.routeAndInjector?.routePath)
@@ -406,9 +406,9 @@ export class SATRouterOutletComponent implements OnInit, OnDestroy
       return;
     }
 
-    if (ri.routeLoader.alwaysNew || c2.routeAndInjector?.routeLoader.component !== ri.routeLoader.component)
+    if (ri.routeResolver.alwaysNew || c2.routeAndInjector?.routeResolver.component !== ri.routeResolver.component)
     {
-      if (!c1.routeAndInjector?.routeLoader?.component && !c2.routeAndInjector?.routeLoader?.component)
+      if (!c1.routeAndInjector?.routeResolver?.component && !c2.routeAndInjector?.routeResolver?.component)
       {
         this.renderer.setStyle(c1.content, 'transition', 'none');
         this.renderer.setStyle(c1.content, 'display', 'flex');
@@ -427,7 +427,7 @@ export class SATRouterOutletComponent implements OnInit, OnDestroy
         this._isFirst = !this._isFirst;
         setTimeout(() =>
         {
-          if (c2.routeAndInjector?.routeLoader.canUnload !== false)
+          if (c2.routeAndInjector?.routeResolver.canUnload !== false)
             this.clear(c2);
 
           this.renderer.setStyle(c2.content, 'display', 'none');
@@ -443,7 +443,7 @@ export class SATRouterOutletComponent implements OnInit, OnDestroy
       switch (this.orientation)
       {
         case 'horizontal':
-          if (ri.routeLoader.index > (c2.routeAndInjector?.routeLoader?.index ?? -1))
+          if (ri.routeResolver.index > (c2.routeAndInjector?.routeResolver?.index ?? -1))
           {
             this.renderer.setStyle(c1.content, 'transform', `translate(${rect.width}px, 0)`);
             this.renderer.setStyle(c2.content, 'transform', `translate(-${rect.width}px, 0)`);
@@ -461,7 +461,7 @@ export class SATRouterOutletComponent implements OnInit, OnDestroy
           }
           break;
         case 'vertical':
-          if (ri.routeLoader.index > (c2.routeAndInjector?.routeLoader?.index ?? -1))
+          if (ri.routeResolver.index > (c2.routeAndInjector?.routeResolver?.index ?? -1))
           {
             this.renderer.setStyle(c1.content, 'transform', `translate(0, ${rect.height}px)`);
             this.renderer.setStyle(c2.content, 'transform', `translate(0, -${rect.height}px)`);
@@ -501,7 +501,7 @@ export class SATRouterOutletComponent implements OnInit, OnDestroy
   {
     this.currentRoute$.next(ri);
 
-    if (c.routeAndInjector?.routeLoader.component === ri.routeLoader.component)
+    if (c.routeAndInjector?.routeResolver.component === ri.routeResolver.component)
     {
       c.params$.next(ri.routePath.stateNode?.params);
       c.path$.next(ri.routePath.pathAddress.fullPath);
@@ -526,7 +526,7 @@ export class SATRouterOutletComponent implements OnInit, OnDestroy
         parent: ri.injector ?? this.parentInjector
       });
 
-    const component = ri.routeLoader.component;
+    const component = ri.routeResolver.component;
     c.view.clear();
     if (!!component)
       c.component = c.view.createComponent(component, { injector: c.injector }).instance;
@@ -536,90 +536,87 @@ export class SATRouterOutletComponent implements OnInit, OnDestroy
 
   private async loadModuleAsync(route: Route): Promise<RouteAndInjector>
   {
-    if (!route.routeLoader.loadChildren) return route;
+    if (!route.routeResolver.loadChildren) return route;
 
-    const module = await route.routeLoader.loadChildren();
-    let loader: ISATRouteLoader | undefined;
+    const module = await route.routeResolver.loadChildren();
+    let resolver: ISATRouteResolver | undefined;
 
     const injector = createInjector(module, this.parentInjector);
-    const routs = injector.get(SAT_ROUTE_LOADERS);
+    const routs = injector.get(SAT_ROUTE_RESOLVERS);
     const path = route.routePath.pathAddress.fullPath;
 
-    //const hierarchy = this.routeHierarchy(injector);
-    //routeLoaders = buildRouteLoaders(path, );
+    for (let i = routeResolvers.length - 1; i >= 0; i--)
+      if (routeResolvers[i].path.startsWith(path) && routeResolvers[i].path !== path)
+        routeResolvers.splice(i, 1);
 
-    for (let i = routeLoaders.length - 1; i >= 0; i--)
-      if (routeLoaders[i].path.startsWith(path) && routeLoaders[i].path !== path)
-        routeLoaders.splice(i, 1);
-
-    const loaders = await ((routs instanceof Observable)
+    const resolvers = await ((routs instanceof Observable)
       ? firstValueFrom(routs)
-      : new Promise((resolve: (value: ISATRouteLoader[]) => void) => resolve(routs)));
+      : new Promise((resolve: (value: ISATRouteResolver[]) => void) => resolve(routs)));
 
-    loaders.forEach(r =>
+    resolvers.forEach(r =>
     {
       if (!r.path)
-        loader = r;
+        resolver = r;
       else
-        routeLoaders.push({
+        routeResolvers.push({
           ...r,
           path: `${path}/${r.path}`,
           redirectTo: (!!r.redirectTo) ? `${path}/${r.redirectTo}` : undefined
         });
     });
 
-    if (!loader) return route;
+    if (!resolver) return route;
 
     route = deepClone(route);
-    route.routeLoader = { ...loader, index: route.routeLoader.index };
+    route.routeResolver = { ...resolver, index: route.routeResolver.index };
     return { ...route, injector };
   }
 
-  private static rootLoaders?: ISATRouteLoader[];
+  private static rootResolvers?: ISATRouteResolver[];
   /** Находим корневые пути */
-  private async rootLoadersAsync(injector: Injector)
+  private async rootResolversAsync(injector: Injector)
   {
-    if (!!SATRouterOutletComponent.rootLoaders) return;
-    let loaders = injector.get(SAT_ROUTE_LOADERS, undefined);
+    if (!!SATRouterOutletComponent.rootResolvers) return;
+    let resolvers = injector.get(SAT_ROUTE_RESOLVERS, undefined);
     let parent = injector.get(Injector, undefined, InjectFlags.SkipSelf);
     while (!!parent)
     {
-      const parentLoaders = parent.get(SAT_ROUTE_LOADERS, undefined);
-      if (!!parentLoaders && parentLoaders !== loaders)
-        loaders = parentLoaders;
+      const parentResolvers = parent.get(SAT_ROUTE_RESOLVERS, undefined);
+      if (!!parentResolvers && parentResolvers !== resolvers)
+        resolvers = parentResolvers;
 
       const newParent = parent.get(Injector, undefined, InjectFlags.SkipSelf);
       if (newParent === parent) break;
       parent = newParent;
     }
 
-    if (loaders instanceof Observable)
+    if (resolvers instanceof Observable)
     {
-      loaders.subscribe({
+      resolvers.subscribe({
         next: ls =>
         {
-          if (!SATRouterOutletComponent.rootLoaders) return;
+          if (!SATRouterOutletComponent.rootResolvers) return;
 
           // Удаляем предыдущие корневые пути
-          SATRouterOutletComponent.rootLoaders.forEach(l =>
+          SATRouterOutletComponent.rootResolvers.forEach(l =>
           {
-            const index = routeLoaders.findIndex(lo => lo.path === l.path);
+            const index = routeResolvers.findIndex(lo => lo.path === l.path);
             if (index < 0) return;
-            routeLoaders.splice(index, 1);
+            routeResolvers.splice(index, 1);
           });
 
-          routeLoaders.splice(0, 0, ...ls);
-          SATRouterOutletComponent.rootLoaders = ls;
+          routeResolvers.splice(0, 0, ...ls);
+          SATRouterOutletComponent.rootResolvers = ls;
         }
       });
 
-      loaders = SATRouterOutletComponent.rootLoaders = await firstValueFrom(loaders);
+      resolvers = SATRouterOutletComponent.rootResolvers = await firstValueFrom(resolvers);
 
     }
 
-    if (!!SATRouterOutletComponent.rootLoaders) return;
-    routeLoaders.push(...loaders);
-    SATRouterOutletComponent.rootLoaders = loaders;
+    if (!!SATRouterOutletComponent.rootResolvers) return;
+    routeResolvers.push(...resolvers);
+    SATRouterOutletComponent.rootResolvers = resolvers;
     //return loaders;
   }
 
@@ -639,7 +636,7 @@ export class SATRouterOutletComponent implements OnInit, OnDestroy
     if (!result.canDeactivate) return result;
 
     const c = this.previewContent;
-    const canD = c.routeAndInjector?.routeLoader?.canDeactivate;
+    const canD = c.routeAndInjector?.routeResolver?.canDeactivate;
     if (!canD) return result;
 
     const address = c.routeAndInjector?.routePath?.pathAddress?.address ?? [];
@@ -670,12 +667,12 @@ export class SATRouterOutletComponent implements OnInit, OnDestroy
   }
 
   /** Можно ли активировать маршрут */
-  async canActivateAsync(loaders: ISATRouteLoader, state: RoutePath)
+  async canActivateAsync(resolver: ISATRouteResolver, state: RoutePath)
   {
-    if (!loaders.canActivate) return true;
-    const ca = Array.isArray(loaders.canActivate)
-      ? loaders.canActivate
-      : [loaders.canActivate];
+    if (!resolver.canActivate) return true;
+    const ca = Array.isArray(resolver.canActivate)
+      ? resolver.canActivate
+      : [resolver.canActivate];
 
     for (const loader of ca)
     {
