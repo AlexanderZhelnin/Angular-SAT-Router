@@ -9,7 +9,9 @@
 - [x] Поддерживает динамическую загрузку модулей
 - [x] Множество дополнительных вариантов
 
-![пример демо режима](./SATRouter.gif)
+![пример](./SATRouter.gif)
+
+![схема](./SATRouter.svg)
 
 [Исходный код](https://github.com/AlexanderZhelnin/Angular-SAT-Router)
 
@@ -224,8 +226,6 @@ activated: EventEmitter<string>
 { provide: SAT_ROUTE_CONFIGURATION, useValue: { debug: true } }
 ```
 ![пример демо режима](./debug.png)
-
-
 
 ## Типы 
 ### ISATStateNode
