@@ -16,10 +16,8 @@ export const SAT_ROUTE_RESOLVERS = new InjectionToken<ISATRouteResolver[] | Beha
 /** Токен конфигурации */
 export const SAT_ROUTE_CONFIGURATION = new InjectionToken<ISATRouteConfiguration>('SAT_ROUTE_CONFIGURATION');
 
-/** Распознаватель маршрута с индексом в массиве распознавателей */
-type RouteResolver = ISATRouteResolver & { index: number };
 /** Данные маршрута с распознавателем */
-type Route = { routePath: RoutePath, routeResolver: RouteResolver };
+type Route = { routePath: RoutePath, routeResolver: ISATRouteResolver };//RouteResolver };
 /** Данные маршрута с распознавателем и инжектором */
 type RouteAndInjector = Route & { injector?: Injector };
 
@@ -321,7 +319,7 @@ export class SATRouterOutletComponent implements OnInit, OnDestroy
 
     return (index < 0)
       ? undefined
-      : { routePath: rp, routeResolver: { ...routeResolvers[index], index } };
+      : { routePath: rp, routeResolver: { ...routeResolvers[index] } };
   }
 
   /** Проверяем маршрут на возможность загрузки и перенаправление на другой маршрут */
@@ -440,16 +438,17 @@ export class SATRouterOutletComponent implements OnInit, OnDestroy
       this.renderer.setStyle(c1.content, 'transition', 'none');
       this.renderer.setStyle(c2.content, 'transition', 'transform .2s');
       const rect = this.rect();
+
+      const index1 = routeResolvers.findIndex(r => r.path === ri.routeResolver.path);
+      const index2 = routeResolvers.findIndex(r => r.path === c2.routeAndInjector?.routeResolver?.path);
+
       switch (this.orientation)
       {
         case 'horizontal':
-          if (ri.routeResolver.index > (c2.routeAndInjector?.routeResolver?.index ?? -1))
+          if (index1 > index2)
           {
             this.renderer.setStyle(c1.content, 'transform', `translate(${rect.width}px, 0)`);
             this.renderer.setStyle(c2.content, 'transform', `translate(-${rect.width}px, 0)`);
-
-            // c1.transform = `translate(${rect.width}px, 0)`;
-            // c2.transform = `translate(-${rect.width}px, 0)`;
           }
           else
           {
@@ -461,21 +460,15 @@ export class SATRouterOutletComponent implements OnInit, OnDestroy
           }
           break;
         case 'vertical':
-          if (ri.routeResolver.index > (c2.routeAndInjector?.routeResolver?.index ?? -1))
+          if (index1 > index2)
           {
             this.renderer.setStyle(c1.content, 'transform', `translate(0, ${rect.height}px)`);
             this.renderer.setStyle(c2.content, 'transform', `translate(0, -${rect.height}px)`);
-
-            // c1.transform = `translate(0, ${rect.height}px)`;
-            // c2.transform = `translate(0, -${rect.height}px)`;
           }
           else
           {
             this.renderer.setStyle(c1.content, 'transform', `translate(0, -${rect.height}px)`);
             this.renderer.setStyle(c2.content, 'transform', `translate(0, ${rect.height}px)`);
-
-            // c1.transform = `translate(0, ${rect.height}px)`;
-            // c2.transform = `translate(0, -${rect.height}px)`;
           }
           break;
       }
@@ -545,6 +538,7 @@ export class SATRouterOutletComponent implements OnInit, OnDestroy
     const routs = injector.get(SAT_ROUTE_RESOLVERS);
     const path = route.routePath.pathAddress.fullPath;
 
+
     for (let i = routeResolvers.length - 1; i >= 0; i--)
       if (routeResolvers[i].path.startsWith(path) && routeResolvers[i].path !== path)
         routeResolvers.splice(i, 1);
@@ -568,7 +562,7 @@ export class SATRouterOutletComponent implements OnInit, OnDestroy
     if (!resolver) return route;
 
     route = deepClone(route);
-    route.routeResolver = { ...resolver, index: route.routeResolver.index };
+    route.routeResolver = { ...resolver }
     return { ...route, injector };
   }
 
