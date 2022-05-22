@@ -3,7 +3,7 @@ import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { EditorComponent } from './editor.component';
 import { EditorsComponent } from './editors.component';
-import { SATRouteLoader, SATRouterModule, SAT_ROUTE_LOADERS } from 'sat-router';
+import { SATRouterModule, SAT_ROUTE_LOADERS } from 'sat-router';
 import { MatTabsModule } from '@angular/material/tabs';
 import { MatButtonModule } from '@angular/material/button';
 import { HttpClientModule } from '@angular/common/http';

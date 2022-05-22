@@ -38,7 +38,7 @@ import { canDeactivate, translator } from './static-data';
  *   },
  * ```
  */
-export const SAT_LINK_PARSE = new InjectionToken<(link: string) => Observable<SATStateNode[]> | undefined>('SATROUT_LINK_PARSE');
+export const SAT_LINK_PARSE = new InjectionToken<(link: string) => Observable<SATStateNode[]> | undefined>('SAT_LINK_PARSE');
 /**
  * Токен представляющий функцию преобразования из полного состояния маршрута в строку
  * ```ts
@@ -52,8 +52,9 @@ export const SAT_LINK_PARSE = new InjectionToken<(link: string) => Observable<SA
       }
     }
  * ```
+ * @publicApi
  */
-export const SAT_STATE_STRINGIFY = new InjectionToken<(rs: SATStateNode[]) => Observable<string> | undefined>('SATROUT_LINK_STRINGIFY');
+export const SAT_STATE_STRINGIFY = new InjectionToken<(rs: SATStateNode[]) => Observable<string> | undefined>('SAT_STATE_STRINGIFY');
 
 /**
  * Сервис для навигации
@@ -147,6 +148,11 @@ export class SATRouterService
   }
   //#endregion
 
+
+  /**
+   * Обновление адресной строки браузера
+   * @async
+   */
   async updateHistoryAsync()
   {
     const s = await firstValueFrom(translator.stringify(this.state ?? []) ?? new BehaviorSubject<string | undefined>(undefined));
@@ -167,6 +173,14 @@ export class SATRouterService
     return { state, currentNode }
   }
 
+  /**
+   * Получить узел данных маршрута
+   *
+   * @param state - состояние всего маршрута
+   * @param address - адрес узла маршрута
+   * @param [withOutLast=false] - не учитывать последний узел
+   * @return {*} Узел маршрута
+   */
   getNode(state: SATStateNode[], address: number[], withOutLast: boolean = false): SATStateNode | undefined
   {
     let currentNodes: SATStateNode[] = state;

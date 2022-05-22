@@ -1,7 +1,7 @@
 import { Component, ElementRef, InjectionToken, Injector, Input, OnInit, Optional, SkipSelf, ɵcreateInjector as createInjector, OnDestroy, ViewChild, Renderer2, ChangeDetectorRef, ViewContainerRef, Inject, InjectFlags } from '@angular/core';
 import { Observable, BehaviorSubject, Subscription, firstValueFrom } from 'rxjs';
 import { SATRouterService } from './sat-router.service';
-import { SATRouteLoader, SATStateNode, SATCanDeActivate, type RoutePath, ISATRouteConfiguration } from './model';
+import { ISATRouteLoader, SATStateNode, ISATCanDeActivate, type RoutePath, ISATRouteConfiguration } from './model';
 import { allCanActivateDeactivated, routeLoaders, translator, type canActivateDeActivateResult } from './static-data';
 
 /** Токен свойств */
@@ -11,18 +11,17 @@ export const SAT_ROUTE_ADDRESS = new InjectionToken<Observable<number[]>>('SAT_R
 /** Токен полного пути */
 export const SAT_ROUTE_PATH = new InjectionToken<Observable<string | undefined>>('SAT_ROUTE_PATH');
 /** Токен загрузчиков */
-export const SAT_ROUTE_LOADERS = new InjectionToken<SATRouteLoader[] | BehaviorSubject<SATRouteLoader[]>>('SAT_ROUTE_LOADERS');
+export const SAT_ROUTE_LOADERS = new InjectionToken<ISATRouteLoader[] | BehaviorSubject<ISATRouteLoader[]>>('SAT_ROUTE_LOADERS');
 
 /** Токен конфигурации */
 export const SAT_ROUTE_CONFIGURATION = new InjectionToken<ISATRouteConfiguration>('SAT_ROUTE_CONFIGURATION');
 
 /** Загрузчик с индексом в массиве загрузчиков */
-type RouteLoader = SATRouteLoader & { index: number };
+type RouteLoader = ISATRouteLoader & { index: number };
 /** Данные маршрута с загрузчиком */
 type Route = { routePath: RoutePath, routeLoader: RouteLoader };
 /** Данные маршрута с загрузчиком и инжектором */
 type RouteAndInjector = Route & { injector?: Injector };
-//type LoaderHierarchy = { loaders: SATRouteLoader[], child?: LoaderHierarchy };
 
 /** Получить реальный маршрута из иерархии */
 function getRealPath(path: string, pathData?: SATStateNode[]): RoutePath | undefined
@@ -105,13 +104,18 @@ class CContent
 }
 
 /**
- * @description
+ * Контейнер маршрута
  *
- * Контейнер маршрута, который динамически заполняется в зависимости от текущего состояния маршрутизатора.
+ * @description Динамически заполняется в зависимости от текущего состояния маршрутизатора *
  *
- * Каждый контейнер маршрута может иметь уникальное имя, определяемое необязательным атрибутом `name`.
+ * @property name - Необходимо для идентификации контейнера в маршруте
+ * @property orientation - Служит для анимации перехода
+ * @property currentRoute$ - Текущие данные маршрута с загрузчиком *
+ * @property childrenOutlet - Дочерние контейнеры маршрута
+ * @property parentOutlet - Родительский контейнер маршрута
+ * @property level - Уровень вложенности
  *
- * ```
+ * ```html
  * <sat-router-outlet></sat-router-outlet>
  * <sat-router-outlet name='left'></sat-router-outlet>
  * <sat-router-outlet name='right'></sat-router-outlet>
@@ -136,22 +140,36 @@ class CContent
 })
 export class SATRouterOutletComponent implements OnInit, OnDestroy
 {
+
+  /**
+   * Имя контейнера
+   * @description Необходимо для идентификации контейнера в маршруте
+   */
   @Input() name: string = '';
+
+  /**
+   * Ориентация контейнера
+   * @description служит для анимации перехода
+   * @default 'horizontal'
+   */
   @Input() orientation: 'horizontal' | 'vertical' = 'horizontal';
 
-  @ViewChild('contentDiv1', { static: true }) contentDiv1?: ElementRef<any>;
-  @ViewChild('contentDiv2', { static: true }) contentDiv2?: ElementRef<any>;
+  @ViewChild('contentDiv1', { static: true }) private contentDiv1?: ElementRef<any>;
+  @ViewChild('contentDiv2', { static: true }) private contentDiv2?: ElementRef<any>;
 
-  @ViewChild('placeholder1', { read: ViewContainerRef, static: true }) view1?: ViewContainerRef;
-  @ViewChild('placeholder2', { read: ViewContainerRef, static: true }) view2?: ViewContainerRef;
+  @ViewChild('placeholder1', { read: ViewContainerRef, static: true }) private view1?: ViewContainerRef;
+  @ViewChild('placeholder2', { read: ViewContainerRef, static: true }) private view2?: ViewContainerRef;
 
-  content1!: CContent;
-  content2!: CContent;
+  private content1!: CContent;
+  private content2!: CContent;
 
-  currentRoute$ = new BehaviorSubject<Route | undefined>(undefined);
+  /** Текущие данные маршрута с загрузчиком */
+  readonly currentRoute$ = new BehaviorSubject<Route | undefined>(undefined);
+  /** Уровень вложенности */
   readonly level: number = 0;
 
-  childrenOutlet: SATRouterOutletComponent[] = [];
+  /** Дочерние контейнеры маршрута*/
+  readonly childrenOutlet: ReadonlyArray<SATRouterOutletComponent> = [];
 
   private _isFirst = true;
   private _subs: Subscription[] = [];
@@ -163,11 +181,12 @@ export class SATRouterOutletComponent implements OnInit, OnDestroy
     private readonly renderer: Renderer2,
     private readonly cdr: ChangeDetectorRef,
     @Optional() @Inject(SAT_ROUTE_CONFIGURATION) private readonly settings: ISATRouteConfiguration,
-    @SkipSelf() @Optional() public readonly parent: SATRouterOutletComponent)
+    /** Родительский контейнер маршрута */
+    @SkipSelf() @Optional() public readonly parentOutlet: SATRouterOutletComponent)
   {
-    if (!parent) return;
-    this.level = parent.level + 1;
-    parent.childrenOutlet.push(this);
+    if (!parentOutlet) return;
+    this.level = parentOutlet.level + 1;
+    (parentOutlet.childrenOutlet as SATRouterOutletComponent[]).push(this);
   }
 
   ngOnInit(): void
@@ -198,10 +217,10 @@ export class SATRouterOutletComponent implements OnInit, OnDestroy
   {
     let index = allCanActivateDeactivated.indexOf(this);
     if (index > -1) allCanActivateDeactivated.splice(index, 1);
-    if (!!this.parent)
+    if (!!this.parentOutlet)
     {
-      index = this.parent.childrenOutlet.indexOf(this);
-      this.parent.childrenOutlet.splice(index, 1);
+      index = this.parentOutlet.childrenOutlet.indexOf(this);
+      (this.parentOutlet.childrenOutlet as SATRouterOutletComponent[]).splice(index, 1);
     }
 
     //allCanDeactivated = allCanDeactivated.filter(o => o !== this);
@@ -274,11 +293,11 @@ export class SATRouterOutletComponent implements OnInit, OnDestroy
   private async getRouteAsync(routeNodes: SATStateNode[] | undefined): Promise<Route | undefined>
   {
     let path = this.name;
-    let parent = this.parent;
+    let parent = this.parentOutlet;
     while (!!parent)
     {
       path = `${parent.name}/${path}`;
-      parent = parent.parent;
+      parent = parent.parentOutlet;
     }
 
     const rp = getRealPath(path, routeNodes);
@@ -520,7 +539,7 @@ export class SATRouterOutletComponent implements OnInit, OnDestroy
     if (!route.routeLoader.loadChildren) return route;
 
     const module = await route.routeLoader.loadChildren();
-    let loader: SATRouteLoader | undefined;
+    let loader: ISATRouteLoader | undefined;
 
     const injector = createInjector(module, this.parentInjector);
     const routs = injector.get(SAT_ROUTE_LOADERS);
@@ -535,7 +554,7 @@ export class SATRouterOutletComponent implements OnInit, OnDestroy
 
     const loaders = await ((routs instanceof Observable)
       ? firstValueFrom(routs)
-      : new Promise((resolve: (value: SATRouteLoader[]) => void) => resolve(routs)));
+      : new Promise((resolve: (value: ISATRouteLoader[]) => void) => resolve(routs)));
 
     loaders.forEach(r =>
     {
@@ -556,7 +575,7 @@ export class SATRouterOutletComponent implements OnInit, OnDestroy
     return { ...route, injector };
   }
 
-  private static rootLoaders?: SATRouteLoader[];
+  private static rootLoaders?: ISATRouteLoader[];
   /** Находим корневые пути */
   private async rootLoadersAsync(injector: Injector)
   {
@@ -629,7 +648,7 @@ export class SATRouterOutletComponent implements OnInit, OnDestroy
 
     if (oldPath === newPath) return result;
 
-    let cds: SATCanDeActivate[] = Array.isArray(canD)
+    let cds: ISATCanDeActivate[] = Array.isArray(canD)
       ? canD
       : [canD];
 
@@ -651,7 +670,7 @@ export class SATRouterOutletComponent implements OnInit, OnDestroy
   }
 
   /** Можно ли активировать маршрут */
-  async canActivateAsync(loaders: SATRouteLoader, state: RoutePath)
+  async canActivateAsync(loaders: ISATRouteLoader, state: RoutePath)
   {
     if (!loaders.canActivate) return true;
     const ca = Array.isArray(loaders.canActivate)

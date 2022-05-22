@@ -4,6 +4,8 @@
     (click)="onActivated('files')"
     [satRouterLinkActive]="'files'"
     [routerOutlet]="outlet"
+    #rl1="satRouterLinkActive"
+    [active]="rl1.isActive$ | async"
     >
     Навигация
   </a>
@@ -11,7 +13,10 @@
   <a mat-tab-link
     (click)="onActivated('git')"
     [satRouterLinkActive]="'git'"
-    [routerOutlet]="outlet">
+    [routerOutlet]="outlet"
+    #rl2="satRouterLinkActive"
+    [active]="rl2.isActive$ | async"
+    >
     git
   </a>
   </nav>

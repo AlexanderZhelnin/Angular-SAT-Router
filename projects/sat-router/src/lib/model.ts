@@ -15,13 +15,8 @@ export class SATStateNode
   params?: any;
 }
 
-// export class SATStateNodeFp extends SATStateNode
-// {
-//   fullPath?: string;
-// }
-
 /** Маршрут с загрузчиком */
-export interface SATRouteLoader
+export interface ISATRouteLoader
 {
   /** Путь маршрута, если есть именованные контейнеры, то они пишутся `:{outlet}` */
   path: string;
@@ -32,9 +27,9 @@ export interface SATRouteLoader
   /** Перенаправление */
   redirectTo?: string;
   /** Можно ли активировать */
-  canActivate?: SATCanActivate | SATCanActivate[];
+  canActivate?: ISATCanActivate | ISATCanActivate[];
   /** Можно ли деактивировать */
-  canDeactivate?: SATCanDeActivate | SATCanDeActivate[];
+  canDeactivate?: ISATCanDeActivate | ISATCanDeActivate[];
   /** Можно ли выгружать */
   canUnload?: boolean;
   /** Не проверять на изменение компонента */
@@ -42,7 +37,7 @@ export interface SATRouteLoader
 };
 
 /** Интерфейс защитника активации */
-export interface SATCanActivate
+export interface ISATCanActivate
 {
   canActivate(state: RoutePath): Observable<boolean> | Promise<boolean> | boolean;
 }
@@ -53,7 +48,7 @@ export type PathAddress = { fullPath: string, address: number[] };
 export type RoutePath = { pathAddress: PathAddress, stateNode: SATStateNode };
 
 /** Интерфейс защитника деактивации */
-export interface SATCanDeActivate
+export interface ISATCanDeActivate
 {
   canDeActivate(component: any, state: RoutePath): Observable<boolean> | Promise<boolean> | boolean;
 }

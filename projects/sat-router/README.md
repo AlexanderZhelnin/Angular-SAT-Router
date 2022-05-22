@@ -19,31 +19,18 @@
 * [SATRouterOutletComponent](#satrouteroutletcomponent)
 * [SATRouterService](#satrouterservice)
 * [SATRouterLinkActive](#satrouterlinkactive)
+* [Защитники](#защитники)
 * [Debug](#debug)
+* [Типы](#типы)
 
 ## SATRouterModule
 Добавляет директивы и сервисы для навигации внутри приложения между представлениями, определенными в приложении. Вы можете импортировать этот NgModule несколько раз, по одному разу, для каждого модуля с отложенной загрузкой.
 ```ts
+
 @NgModule({
   declarations: [
-    MainComponent
+    //
   ],
-  imports: [
-    CommonModule,
-    SATRouterModule.create([
-      { path: '', component: MainComponent, canUnload: false
-      /* Для того что бы нагруженный компонент не перестраивался каждый раз когда мы на него возвращаемся, то запрещаем его выгрузку */ },
-      { path: 'panel-left:left', loadChildren: () => import('../left-panel/left-panel.module').then(_ => _.LeftPanelModule) },
-      { path: 'editor:center', loadChildren: () => import('../editor/editor.module').then(_ => _.EditorModule) },
-      { path: 'root1:2', loadChildren: () => import('../root1.module').then(_ => _.Root1Module) },
-      { path: 'root2:2', component: Root2Component }
-    ])
-  ]
-})
-```
-
-```ts
-@NgModule({  
   imports: [    
     SATRouterModule.create(
       // Загрузка определённого компонента
@@ -70,7 +57,7 @@
             map(fs => [
               { path: '', component: EditorsComponent },
               ...fs.map(f => ({ path: f, component: EditorComponent, alwaysNew: true
-              /* так как компонент не меняется, что бы была анимация указываем флаг alwaysNew */ })),
+              /* так как компонент не меняется, что бы была анимация указываем флаг alwaysNew */ }))
             ]));
 
       }, deps: [MainService]
@@ -158,7 +145,19 @@ navigate([
 }
 ])
 ```
-
+### updateHistoryAsync
+Обновление адресной строки браузера
+### cloneState
+Копия маршрута с выделением текущего уровня
+Служит для модернизации полного маршрута с последующим переходом
+```ts
+const cloned = cloneState(address);
+if (!cloned.currentNode) return;
+cloned.currentNode.path = newPath;
+this.s_router.navigate(cloned.state);
+```
+### getNode
+Получить узел данных маршрута
 ## SATRouterOutletComponent
 Контейнер маршрута, который динамически заполняется в зависимости от текущего состояния маршрутизатора.
 
@@ -171,28 +170,50 @@ navigate([
 Именованные контейнеры маршрута будут целями маршрута с тем же именем.
 
 Объект `SATStateNode` для именованного маршрута имеет свойство `outlet` для идентификации целевого контейнера маршрута:
-`{path: <base-path>, component: <component>, outlet: <target_outlet_name>}`
-
+```ts{path: <base-path>, component: <component>, outlet: <target_outlet_name>}```
 
 ## SATRouterLinkActive
 Директива для обнаружения активности маршрута
 
+### Свойства
+
+#### Контейнер маршрута
+```ts
+routerOutlet: SATRouterOutletComponent | undefined
+```
+#### Событие активации отслеживаемого маршрута
+```ts
+isActive$: BehaviorSubject<boolean>
+```
+#### Событие активации отслеживаемого маршрута
+```ts
+activated: EventEmitter<string>
+```
+### Пример использования
 ```html
 <nav mat-tab-nav-bar>
-  <a mat-tab-link (click)="onClick1()" 
+  <a mat-tab-link (click)="onTabClick()" 
      [satRouterLinkActive]="{rout_path}"
-     [routerOutlet]="outlet">
+     [routerOutlet]="outlet"
+     #rl="satRouterLinkActive"
+     [active]="rl.isActive$ | async">
     {{tab1_header}}
   </a>
 
-  <a mat-tab-link (click)="onClick2()" 
-     [satRouterLinkActive]="{rout_path}"
-     [routerOutlet]="outlet">
-    {{tab2_header}}
-  </a>
 </nav>
 <sat-router-outlet #outlet ></sat-router-outlet>
 ```
+## Защитники
+### canActivate
+Проводит проверку можно ли перейти к маршруту
+
+Представлен в виде свойства загрузчика `canActivate` и интерфейсом [ISATCanActivate](#isatcanactivate)
+может принимать одиночный объект SATCanActivate или массив SATCanActivate[]
+
+### canDeactivate
+Проводит проверку можно ли покинуть маршрут
+Представлен в виде свойства загрузчика `canDeactivate` и интерфейсом [ISATCanDeActivate](#isatcandeactivate)
+может принимать одиночный объект SATCanDeActivate или массив SATCanDeActivate[]
 
 ## Debug
 Предусмотрен режим отладки с показом SATRouterOutletComponent и текущем состоянием маршрута
@@ -201,3 +222,57 @@ navigate([
 { provide: SAT_ROUTE_CONFIGURATION, useValue: { debug: true } }
 ```
 ![пример демо режима](./debug.png)
+
+
+
+## Типы 
+### ISATStateNode
+### ISATRouteLoader
+### ISATCanActivate
+интерфейс имеет одну функцию, функция может быть асинхронной 
+```ts
+canActivate(state: RoutePath): Observable<boolean> | Promise<boolean> | boolean;
+```
+пример
+```ts
+SATRouterModule.create([
+  { path: '', component: Child1Component },  
+  { path: 'subChild3:1', component: Child1Sub1Component },
+  {
+    path: 'subChild4:1', component: Child1Sub2Component,
+    canActivate:
+    {
+      // тут пример асинхронной проверки реализованной через Promise
+      canActivate: async (state: RoutePath) =>
+      {
+        alert(`нельзя перейти в маршрут "subChild4:1"`)
+        return false;
+      }
+    }
+    // при неудачной проверке на активацию перейти на маршрут
+    , redirectTo: 'subChild3:1'
+  }
+])
+```
+### ISATCanDeActivate
+интерфейс имеет одну функцию, функция может быть асинхронной 
+```ts
+canDeActivate(component: any, state: RoutePath): Observable<boolean> | Promise<boolean> | boolean;
+```
+пример
+```ts
+SATRouterModule.create([
+  { path: '', component: Child1Component },  
+  {
+    path: 'subChild2:0', component: Child1Sub2Component,
+    canDeactivate: {
+      // тут пример асинхронной проверки реализованной через Promise
+      canDeActivate: async (component: any, state: RoutePath) =>
+      {
+        alert(`нельзя покинуть маршрут "subChild2:0"`)
+        return false;
+      }
+    }
+  }
+])
+```

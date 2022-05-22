@@ -1,5 +1,5 @@
 import { Observable, of } from 'rxjs';
-import { SATStateNode, SATRouteLoader } from './model';
+import { SATStateNode, ISATRouteLoader } from './model';
 
 export type canActivateDeActivateResult = {
   canDeactivate: boolean,
@@ -8,8 +8,8 @@ export type canActivateDeActivateResult = {
 
 export interface ICanActivateDeActivate
 {
-  parent: ICanActivateDeActivate | undefined;
-  childrenOutlet: ICanActivateDeActivate[],
+  parentOutlet: ICanActivateDeActivate | undefined;
+  childrenOutlet: ReadonlyArray<ICanActivateDeActivate>,
   canDeActivateAsync(rs: SATStateNode[]): Promise<canActivateDeActivateResult>
   //canActivateAsync(rs: SATStateNode[]): Promise<canActivateDeActivateResult>
   restoreState(cdr: canActivateDeActivateResult, ds: SATStateNode[]): void
@@ -20,7 +20,7 @@ export const allCanActivateDeactivated: ICanActivateDeActivate[] = [];
 /** Для проверки можно ли покинуть маршруту, с преобразование данных */
 export async function canDeactivate(rs: SATStateNode[])
 {
-  const roots = [...allCanActivateDeactivated.filter(cd => !cd.parent)];
+  const roots = [...allCanActivateDeactivated.filter(cd => !cd.parentOutlet)];
 
   for (const cd of roots)
   {
@@ -29,7 +29,7 @@ export async function canDeactivate(rs: SATStateNode[])
   }
 }
 
-export const routeLoaders: SATRouteLoader[] = [];
+export const routeLoaders: ISATRouteLoader[] = [];
 
 export const translator = {
 

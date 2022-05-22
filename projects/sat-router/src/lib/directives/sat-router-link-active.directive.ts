@@ -1,27 +1,40 @@
 import { Subscription, BehaviorSubject } from 'rxjs';
-import { AfterContentInit, Directive, EventEmitter, Injector, Input, OnChanges, OnDestroy, Output, SimpleChanges } from '@angular/core';
+import { AfterContentInit, Directive, EventEmitter, Input, OnChanges, OnDestroy, Output, SimpleChanges } from '@angular/core';
 
 import { SATRouterOutletComponent } from '../sat-router-outlet.component';
-import { MatTabLink } from '@angular/material/tabs';
 
 /**
  * Директива для обнаружения активности маршрута
- * ```
- * <nav mat-tab-nav-bar>
- *   <a mat-tab-link (click)="onClick1()"
- *      [satRouterLinkActive]="{rout_path}"
- *      [routerOutlet]="outlet">
- *     {{Имя_закладки}}
- *   </a>
  *
- *   <a mat-tab-link (click)="onClick2()"
+ * ### Свойства
+ *
+ * ### Контейнер маршрута
+ * ```ts
+ * routerOutlet: SATRouterOutletComponent | undefined
+ * ```
+ * #### Событие активации отслеживаемого маршрута
+ * ```ts
+ * isActive$: BehaviorSubject<boolean>
+ * ```
+ * #### Событие активации маршрута
+ * ```ts
+ * activated: EventEmitter<string>
+ * ```
+ *
+ * ### Пример использования
+ * ```html
+ * <nav mat-tab-nav-bar>
+ *   <a mat-tab-link (click)="onTabClick()"
  *      [satRouterLinkActive]="{rout_path}"
- *      [routerOutlet]="outlet">
- *     {{Имя_закладки}}
+ *      [routerOutlet]="outlet"
+ *      #rl="satRouterLinkActive"
+ *      [active]="rl.isActive$ | async">
+ *      {{Имя_закладки}}
  *   </a>
  * </nav>
  * <sat-router-outlet #outlet></sat-router-outlet>
-```
+ *```
+ * @publicApi
  */
 @Directive({
   selector: '[satRouterLinkActive]',
@@ -29,17 +42,22 @@ import { MatTabLink } from '@angular/material/tabs';
 })
 export class SATRouterLinkActiveDirective implements OnChanges, OnDestroy, AfterContentInit
 {
-  isActive$ = new BehaviorSubject(false);
+  /** Событие активации отслеживаемого маршрута */
+  readonly isActive$ = new BehaviorSubject(false);
 
+  /** Отслеживаемый маршрут */
   @Input()
   satRouterLinkActive?: string
 
+  /** Событие активации маршрута */
   @Output()
-  activated = new EventEmitter<string>();
+  readonly activated = new EventEmitter<string>();
 
   //#region routerOutlet
   private _roSubs?: Subscription;
   private _routerOutlet?: SATRouterOutletComponent;
+
+  /** Контейнер маршрута */
   get routerOutlet(): SATRouterOutletComponent | undefined { return this._routerOutlet; }
   @Input()
   set routerOutlet(value: SATRouterOutletComponent | undefined)
@@ -51,7 +69,7 @@ export class SATRouterLinkActiveDirective implements OnChanges, OnDestroy, After
   }
   //#endregion
 
-  constructor(private mtl: MatTabLink)
+  constructor()
   {
 
   }
@@ -86,9 +104,6 @@ export class SATRouterLinkActiveDirective implements OnChanges, OnDestroy, After
     if (this.isActive$.value === isActive) return;
 
     this.isActive$.next(isActive);
-
-    this.mtl.active = isActive;
-
 
     if (isActive)
       this.activated.emit(this.routerOutlet?.currentRoute$?.value?.routePath?.pathAddress?.fullPath);

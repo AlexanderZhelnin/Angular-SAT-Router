@@ -4,7 +4,10 @@
     mat-tab-link
     (click)="onActivated(editor)"
     [satRouterLinkActive]="editor.name"
-    [routerOutlet]="outlet">
+    [routerOutlet]="outlet"
+    #rl="satRouterLinkActive"
+    [active]="rl.isActive$ | async"
+    >
     {{editor.name}}
   </a>
 

@@ -1,7 +1,7 @@
 import { Observable } from 'rxjs';
 import { CommonModule } from '@angular/common';
 import { ModuleWithProviders, NgModule } from '@angular/core';
-import { SATRouteLoader } from './model';
+import { ISATRouteLoader } from './model';
 import { SATRouterOutletComponent, SAT_ROUTE_LOADERS } from './sat-router-outlet.component';
 //import { routeLoaders } from './static-data';
 import { SATRouterLinkActiveDirective } from './directives/sat-router-link-active.directive';
@@ -50,7 +50,7 @@ import { routeLoaders } from './static-data';
 })
 export class SATRouterModule
 {
-  static create(routs: SATRouteLoader[] | Observable<SATRouteLoader[]>): ModuleWithProviders<SATRouterModule>
+  static create(routs: ISATRouteLoader[] | Observable<ISATRouteLoader[]>): ModuleWithProviders<SATRouterModule>
   {
     return {
       ngModule: SATRouterModule, providers: [
