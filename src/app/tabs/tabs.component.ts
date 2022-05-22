@@ -52,8 +52,8 @@ export class TabsComponent implements OnInit
         outlet: '' + this.index,
         params: { index: this.index },
       };
-    // else if (!!this.saveState)
-    //   cloned.currentNode.children[this.index] = this.saveState;
+    else if (!!this.saveState)
+      cloned.currentNode.children[this.index] = this.saveState;
     else
       cloned.currentNode.children[this.index] = {
         path: this.path1,

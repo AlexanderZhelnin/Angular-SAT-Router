@@ -11,7 +11,6 @@ export interface ICanActivateDeActivate
   parentOutlet: ICanActivateDeActivate | undefined;
   childrenOutlet: ReadonlyArray<ICanActivateDeActivate>,
   canDeActivateAsync(rs: ISATStateNode[]): Promise<canActivateDeActivateResult>
-  //canActivateAsync(rs: SATStateNode[]): Promise<canActivateDeActivateResult>
   restoreState(cdr: canActivateDeActivateResult, ds: ISATStateNode[]): void
 }
 

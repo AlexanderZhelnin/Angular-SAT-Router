@@ -113,6 +113,7 @@ class CContent
  * @property parentOutlet - Родительский контейнер маршрута
  * @property level - Уровень вложенности
  *
+ * @example
  * ```html
  * <sat-router-outlet></sat-router-outlet>
  * <sat-router-outlet name='left'></sat-router-outlet>

@@ -21,7 +21,7 @@ import { SATRouterOutletComponent } from '../sat-router-outlet.component';
  * activated: EventEmitter<string>
  * ```
  *
- * ### Пример использования
+ * @example Пример использования
  * ```html
  * <nav mat-tab-nav-bar>
  *   <a mat-tab-link (click)="onTabClick()"

@@ -19,6 +19,7 @@ import { SATRouterLinkActiveDirective } from './directives/sat-router-link-activ
  * * `create()` метод создает `NgModule`, который содержит все директивы и заданные
  * распознаватели маршрутов.
  *
+ * @example
  * ```ts
  *   imports: [
  *     SATRouterModule.create(

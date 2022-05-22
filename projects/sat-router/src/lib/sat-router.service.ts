@@ -6,7 +6,7 @@ import { canDeactivate, translator } from './static-data';
 /**
  * Токен представляющий функцию преобразования из строки в полное состояние маршрута
  *
- * # Пример регистрации в корневом модуле
+ * @example Пример регистрации в корневом модуле
  * ```ts
  * providers: [
  *   {
@@ -41,6 +41,7 @@ import { canDeactivate, translator } from './static-data';
 export const SAT_LINK_PARSE = new InjectionToken<(link: string) => Observable<ISATStateNode[]> | undefined>('SAT_LINK_PARSE');
 /**
  * Токен представляющий функцию преобразования из полного состояния маршрута в строку
+ * @example
  * ```ts
  * providers: [
  *  {
@@ -86,7 +87,7 @@ export class SATRouterService
   /**
    * Перейти по строковой ссылке
    *
-   * ## Пример:
+   * @example
    * ```ts
    * navigate('root1/1')
    * ```
@@ -95,7 +96,7 @@ export class SATRouterService
   /**
    * Перейти по состоянию маршрута
    *
-   * ## Пример:
+   * @example
    * ```ts
    * navigate([
       {
