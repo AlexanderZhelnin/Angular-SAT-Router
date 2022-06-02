@@ -14,6 +14,9 @@
 ![схема](./SATRouter.svg)
 
 [Исходный код](https://github.com/AlexanderZhelnin/Angular-SAT-Router)
+[Песочница](https://stackblitz.com/edit/sat-routing)
+
+[![Видео](./logo_121.png)](https://youtu.be/ZyVZUns1lL8)
 
 * [SATRouterModule](#satroutermodule)
 * [SAT_LINK_PARSE](#sat_link_parse)
@@ -22,7 +25,7 @@
 * [SATRouterService](#satrouterservice)
 * [SATRouterLinkActive](#satrouterlinkactive)
 * [Защитники](#защитники)
-* [Debug](#debug)
+* [Debug](#отладка)
 * [Типы](#типы)
 
 ## SATRouterModule
@@ -40,7 +43,11 @@
       // Загрузка определённого компонента
       { path: 'root1', component: RootComponent },
       // Динамически загружаемый модуль
-      { path: 'root2', loadChildren: () => import('./modules/root2.module').then(_ => _.Root2Module) }
+      { 
+        path: 'root2', 
+        loadChildren: () => 
+          import('./modules/root2.module').then(_ => _.Root2Module) 
+      }
     )
   ],
 ```
@@ -60,8 +67,13 @@
             first(),
             map(fs => [
               { path: '', component: EditorsComponent },
-              ...fs.map(f => ({ path: f, component: EditorComponent, alwaysNew: true
-              /* так как компонент не меняется, что бы была анимация указываем флаг alwaysNew */ }))
+              ...fs.map(f => ({ 
+                path: f, 
+                component: EditorComponent, 
+                alwaysNew: true
+                /* так как компонент не меняется, 
+                   что бы была анимация указываем флаг alwaysNew */ 
+              }))
             ]));
 
       }, deps: [MainService]
@@ -219,7 +231,7 @@ activated: EventEmitter<string>
 Представлен в виде свойства распознавателя маршрута [ISATRouteResolver](#isatrouteresolver) `canDeactivate` и интерфейсом [ISATCanDeActivate](#isatcandeactivate)
 может принимать одиночный объект SATCanDeActivate или массив SATCanDeActivate[]
 
-## Debug
+## Отладка
 Предусмотрен режим отладки с показом SATRouterOutletComponent и текущем состоянием маршрута
 для этого необходимо зарегистрировать провайдер
 ```ts
@@ -247,7 +259,9 @@ ts
 ```ts
 interface ISATRouteResolver
 {
-  /** Путь маршрута, если есть именованные контейнеры, то они пишутся `{путь}:{outlet}` */
+  /** Путь маршрута, если есть именованные контейнеры,
+   * то они пишутся `{путь}:{outlet}`
+   */
   path: string;
   /** Тип компонента */
   component?: Type<any>;
@@ -270,7 +284,8 @@ interface ISATRouteResolver
 ```ts
 interface ISATCanActivate
 {
-  canActivate(state: RoutePath): Observable<boolean> | Promise<boolean> | boolean;
+  canActivate(state: RoutePath): 
+  Observable<boolean> | Promise<boolean> | boolean;
 }
 ```
 Пример:
@@ -299,7 +314,8 @@ SATRouterModule.create([
 ```ts
 interface ISATCanDeActivate
 {
-  canDeActivate(component: any, state: RoutePath): Observable<boolean> | Promise<boolean> | boolean;
+  canDeActivate(component: any, state: RoutePath): 
+    Observable<boolean> | Promise<boolean> | boolean;
 }
 ```
 пример

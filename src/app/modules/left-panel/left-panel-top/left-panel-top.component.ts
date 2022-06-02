@@ -23,7 +23,7 @@ export class LeftPanelTopComponent implements OnInit
   async onActivated(step: string)
   {
     if (!this.address) return;
-    const address = await firstValueFrom(this.address.pipe(first(), filter(_ => !!_)));
+    const address = await firstValueFrom(this.address.pipe(filter(_ => !!_)));
 
     if (!address) return;
 

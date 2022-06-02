@@ -1,6 +1,6 @@
 import { NgModule } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
-import { Observable, of } from 'rxjs';
+import { of } from 'rxjs';
 import { SATRouterModule, ISATStateNode, SAT_LINK_PARSE, SAT_ROUTE_CONFIGURATION, SAT_STATE_STRINGIFY } from 'sat-router';
 import { AppComponent } from './app.component';
 import { Root2Component } from './modules/root2.component';
@@ -87,14 +87,6 @@ export function unzip(s: string)
     SATRouterModule.create([
       { path: 'auth', component: AuthComponent },
       { path: 'main', loadChildren: () => import('./modules/main/main.module').then(_ => _.MainModule) },
-
-      // { path: 'left:0', loadChildren: () => import('./modules/left-panel/left-panel.module').then(_ => _.LeftPanelModule) },
-
-      // { path: 'editor:1', loadChildren: () => import('./modules/editor/editor.module').then(_ => _.EditorModule) },
-
-      // { path: 'root1:2', loadChildren: () => import('./modules/root1.module').then(_ => _.Root1Module) },
-      // { path: 'root2:2', component: Root2Component },
-
     ])
   ],
   providers: [
@@ -161,7 +153,7 @@ export function unzip(s: string)
         return of(`#sat-link:${s}`);
       }
     },
-    { provide: SAT_ROUTE_CONFIGURATION, useValue: { debug: true } }
+    //{ provide: SAT_ROUTE_CONFIGURATION, useValue: { debug: true } }
 
   ],
   bootstrap: [AppComponent]
