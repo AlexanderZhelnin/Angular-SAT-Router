@@ -1,4 +1,4 @@
-import { Component, ElementRef, InjectionToken, Injector, Input, OnInit, Optional, SkipSelf, ɵcreateInjector as createInjector, OnDestroy, ViewChild, Renderer2, ChangeDetectorRef, ViewContainerRef, Inject, InjectFlags } from '@angular/core';
+import { Component, ElementRef, InjectionToken, Injector, Input, OnInit, Optional, SkipSelf, ɵcreateInjector as createInjector, OnDestroy, ViewChild, Renderer2, ChangeDetectorRef, ViewContainerRef, Inject, InjectFlags, ChangeDetectionStrategy } from '@angular/core';
 import { Observable, BehaviorSubject, Subscription, firstValueFrom } from 'rxjs';
 import { SATRouterService } from './sat-router.service';
 import { ISATRouteResolver, ISATStateNode, ISATCanDeActivate, type RoutePath, ISATRouteConfiguration } from './model';
@@ -135,7 +135,8 @@ class CContent
 @Component({
   selector: 'sat-router-outlet',
   templateUrl: './sat-router-outlet.component.html',
-  styleUrls: ['./sat-router-outlet.component.scss']
+  styleUrls: ['./sat-router-outlet.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class SATRouterOutletComponent implements OnInit, OnDestroy
 {
