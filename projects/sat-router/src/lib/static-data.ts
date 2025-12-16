@@ -14,7 +14,6 @@ export interface ICanActivateDeActivate
   restoreState(cdr: canActivateDeActivateResult, ds: ISATStateNode[]): void
 }
 
-
 export const allCanActivateDeactivated: ICanActivateDeActivate[] = [];
 /** Для проверки можно ли покинуть маршруту, с преобразование данных */
 export async function canDeactivate(rs: ISATStateNode[])

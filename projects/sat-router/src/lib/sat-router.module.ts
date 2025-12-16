@@ -4,6 +4,17 @@ import { ModuleWithProviders, NgModule } from '@angular/core';
 import { ISATRouteResolver } from './model';
 import { SATRouterOutletComponent, SAT_ROUTE_RESOLVERS } from './sat-router-outlet.component';
 import { SATRouterLinkActiveDirective } from './directives/sat-router-link-active.directive';
+//import { allCanActivateDeactivated } from './static-data';
+
+// window.addEventListener('beforeunload', (ev: any) =>
+// {
+//   for (let i = 0; i < allCanActivateDeactivated.length; i++)
+//   {
+//     allCanActivateDeactivated[i].canDeActivateAsync()
+
+//   }
+//   //ev.returnValue = '123';
+// });
 
 
 /**

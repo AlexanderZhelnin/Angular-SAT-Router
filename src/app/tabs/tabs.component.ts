@@ -70,7 +70,7 @@ export class TabsComponent implements OnInit
         ]
       };
 
-    this.s_router.navigate(cloned.state);
+    this.s_router.navigate([...cloned.state.map(s => ({ ...s, test: '123'}))]);
   }
 
   async onClick2()

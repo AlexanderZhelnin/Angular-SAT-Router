@@ -1,4 +1,4 @@
-import { BehaviorSubject, first, map, shareReplay, switchMap } from 'rxjs';
+import { BehaviorSubject, first, map, shareReplay, switchMap, delay } from 'rxjs';
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { EditorComponent } from './editor.component';
@@ -6,7 +6,7 @@ import { EditorsComponent } from './editors.component';
 import { SATRouterModule, SAT_ROUTE_RESOLVERS } from 'sat-router';
 import { MatTabsModule } from '@angular/material/tabs';
 import { MatButtonModule } from '@angular/material/button';
-import { HttpClientModule } from '@angular/common/http';
+import { HttpClient, HttpClientModule } from '@angular/common/http';
 import { NgScrollbarModule } from 'ngx-scrollbar';
 import { MainService } from 'src/app/services/main.service';
 
@@ -21,14 +21,32 @@ import { MainService } from 'src/app/services/main.service';
     MatTabsModule,
     HttpClientModule,
     NgScrollbarModule,
-    SATRouterModule
+    SATRouterModule,
+    HttpClientModule,
   ],
+  // providers: [
+  //   {
+  //     provide: SAT_ROUTE_RESOLVERS, useFactory: (client: HttpClient) =>
+  //     {
+  //       return client.get<string[]>('тут адрес')
+  //         .pipe(map(fs => [
+  //           // Это корневой компонент
+  //           { path: '', component: EditorsComponent },
+  //           ...fs.map(f => ({
+  //             path: f, component: EditorComponent, alwaysNew: true
+  //             /* так как компонент не меняется, что бы была анимация указываем флаг alwaysNew */
+  //           })),
+  //         ]));
+  //     }, deps: [HttpClient]
+  //   }
+  // ]
   providers: [
     {
       provide: SAT_ROUTE_RESOLVERS, useFactory: (s_files: MainService) =>
       {
         return s_files.files$
           .pipe(
+            // delay(5000),
             first(),
             map(fs => [
               { path: '', component: EditorsComponent },
@@ -39,8 +57,11 @@ import { MainService } from 'src/app/services/main.service';
               { path: '*', redirectTo: 'source-code' }
             ]));
 
-      }, deps: [MainService]
+      }, deps: [MainService, HttpClient]
     }
   ]
+
 })
 export class EditorModule { }
+
+

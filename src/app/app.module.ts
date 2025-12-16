@@ -1,15 +1,17 @@
 import { NgModule } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
-import { of } from 'rxjs';
-import { SATRouterModule, ISATStateNode, SAT_LINK_PARSE, SAT_ROUTE_CONFIGURATION, SAT_STATE_STRINGIFY } from 'sat-router';
+import { delay, of, BehaviorSubject, shareReplay } from 'rxjs';
+import { SATRouterModule, ISATStateNode, SAT_LINK_PARSE, SAT_ROUTE_CONFIGURATION, SAT_STATE_STRINGIFY, SAT_ROUTE_RESOLVERS, ISATRouteResolver } from 'sat-router';
 import { AppComponent } from './app.component';
 import { Root2Component } from './modules/root2.component';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { AuthComponent } from './modules/auth/auth.component';
 import { MatButtonModule } from '@angular/material/button';
+import { HttpClient, HttpClientModule } from '@angular/common/http';
 
 export function zip(s: string): string
 {
+  //return s;
   try
   {
     const dict: { [key: string]: number } = {};
@@ -43,6 +45,7 @@ export function zip(s: string): string
 
 export function unzip(s: string)
 {
+  //return s;
   try
   {
     const dict: { [key: string]: string } = {};
@@ -84,12 +87,29 @@ export function unzip(s: string)
     BrowserModule,
     BrowserAnimationsModule,
     MatButtonModule,
+    HttpClientModule,
     SATRouterModule.create([
       { path: 'auth', component: AuthComponent },
       { path: 'main', loadChildren: () => import('./modules/main/main.module').then(_ => _.MainModule) },
-    ])
+    ]),
+    // SATRouterModule.create(new BehaviorSubject([
+    //   { path: 'auth', component: AuthComponent },
+    //   { path: 'main', loadChildren: () => import('./modules/main/main.module').then(_ => _.MainModule) },
+    // ])),
+    //SATRouterModule
   ],
   providers: [
+
+    // {
+    //   provide: SAT_ROUTE_RESOLVERS, useFactory: (client: HttpClient) =>
+    //   {
+    //     return of([
+    //       { path: 'auth', component: AuthComponent },
+    //       { path: 'main', loadChildren: () => import('./modules/main/main.module').then(_ => _.MainModule) },
+    //     ]).pipe(shareReplay(1));//.pipe(delay(5000));
+
+    //   }, deps: [HttpClient]
+    // },
     {
       provide: SAT_LINK_PARSE,
       useValue: (link: string) =>
@@ -149,11 +169,28 @@ export function unzip(s: string)
       provide: SAT_STATE_STRINGIFY,
       useValue: (rs: ISATStateNode[]) =>
       {
+        rs = [...rs.map(r => { return { ...r, test: undefined } })];
         const s = encodeURIComponent(zip(JSON.stringify(rs)));
         return of(`#sat-link:${s}`);
       }
     },
     //{ provide: SAT_ROUTE_CONFIGURATION, useValue: { debug: true } }
+
+    // {
+    //   provide: SAT_ROUTE_RESOLVERS, useFactory: (client: HttpClient) =>
+    //   {
+    //     //const result = new BehaviorSubject<ISATRouteResolver[]>([]);
+
+        // return of([
+        //   { path: 'auth', component: AuthComponent },
+        //   { path: 'main', loadChildren: () => import('./modules/main/main.module').then(_ => _.MainModule) },
+        // ]).pipe(delay(5000)) as BehaviorSubject<ISATRouteResolver[]>;
+
+    //   },
+    //   deps: [HttpClient]
+    // }
+
+
 
   ],
   bootstrap: [AppComponent]

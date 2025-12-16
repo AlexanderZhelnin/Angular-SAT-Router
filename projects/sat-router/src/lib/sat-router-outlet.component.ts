@@ -1,5 +1,5 @@
 import { Component, ElementRef, InjectionToken, Injector, Input, OnInit, Optional, SkipSelf, ɵcreateInjector as createInjector, OnDestroy, ViewChild, Renderer2, ChangeDetectorRef, ViewContainerRef, Inject, InjectFlags, ChangeDetectionStrategy } from '@angular/core';
-import { Observable, BehaviorSubject, Subscription, firstValueFrom } from 'rxjs';
+import { Observable, BehaviorSubject, Subscription, firstValueFrom, isObservable } from 'rxjs';
 import { SATRouterService } from './sat-router.service';
 import { ISATRouteResolver, ISATStateNode, ISATCanDeActivate, type RoutePath, ISATRouteConfiguration } from './model';
 import { allCanActivateDeactivated, routeResolvers, type canActivateDeActivateResult } from './static-data';
@@ -545,7 +545,7 @@ export class SATRouterOutletComponent implements OnInit, OnDestroy
       if (routeResolvers[i].path.startsWith(path) && routeResolvers[i].path !== path)
         routeResolvers.splice(i, 1);
 
-    const resolvers = await ((routs instanceof Observable)
+    const resolvers = await (isObservable(routs)
       ? firstValueFrom(routs)
       : new Promise((resolve: (value: ISATRouteResolver[]) => void) => resolve(routs)));
 
@@ -575,18 +575,22 @@ export class SATRouterOutletComponent implements OnInit, OnDestroy
     if (!!SATRouterOutletComponent.rootResolvers) return;
     let resolvers = injector.get(SAT_ROUTE_RESOLVERS, undefined);
     let parent = injector.get(Injector, undefined, InjectFlags.SkipSelf);
-    while (!!parent)
+    try
     {
-      const parentResolvers = parent.get(SAT_ROUTE_RESOLVERS, undefined);
-      if (!!parentResolvers && parentResolvers !== resolvers)
-        resolvers = parentResolvers;
+      while (!!parent)
+      {
+        const parentResolvers = parent.get(SAT_ROUTE_RESOLVERS, undefined);
+        if (!!parentResolvers && parentResolvers !== resolvers)
+          resolvers = parentResolvers;
 
-      const newParent = parent.get(Injector, undefined, InjectFlags.SkipSelf);
-      if (newParent === parent) break;
-      parent = newParent;
-    }
+        const newParent = parent.get(Injector, undefined, InjectFlags.SkipSelf);
+        if (newParent === parent) break;
+        parent = newParent;
 
-    if (resolvers instanceof Observable)
+      }
+    } catch { }
+
+    if (isObservable(resolvers))
     {
       resolvers.subscribe({
         next: ls =>
@@ -650,7 +654,7 @@ export class SATRouterOutletComponent implements OnInit, OnDestroy
     {
       let resultCD = cd.canDeActivate(c.component, state);
 
-      if (resultCD instanceof Observable)
+      if (isObservable(resultCD))
         resultCD = firstValueFrom(resultCD);
 
       if ((typeof resultCD === 'boolean' && !resultCD) || (resultCD instanceof Promise && !await resultCD))
@@ -673,7 +677,7 @@ export class SATRouterOutletComponent implements OnInit, OnDestroy
     for (const loader of ca)
     {
       let resultCA = loader.canActivate(state);
-      if (resultCA instanceof Observable)
+      if (isObservable(resultCA))
         resultCA = firstValueFrom(resultCA);
 
       if ((typeof resultCA === 'boolean' && !resultCA) || (resultCA instanceof Promise && !await resultCA))
